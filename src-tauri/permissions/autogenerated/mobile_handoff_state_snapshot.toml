@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-mobile-handoff-state-snapshot"
+description = "Enables the mobile_handoff_state_snapshot command without any pre-configured scope."
+commands.allow = ["mobile_handoff_state_snapshot"]
+
+[[permission]]
+identifier = "deny-mobile-handoff-state-snapshot"
+description = "Denies the mobile_handoff_state_snapshot command without any pre-configured scope."
+commands.deny = ["mobile_handoff_state_snapshot"]

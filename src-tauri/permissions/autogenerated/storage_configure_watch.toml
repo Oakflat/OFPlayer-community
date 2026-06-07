@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-storage-configure-watch"
+description = "Enables the storage_configure_watch command without any pre-configured scope."
+commands.allow = ["storage_configure_watch"]
+
+[[permission]]
+identifier = "deny-storage-configure-watch"
+description = "Denies the storage_configure_watch command without any pre-configured scope."
+commands.deny = ["storage_configure_watch"]

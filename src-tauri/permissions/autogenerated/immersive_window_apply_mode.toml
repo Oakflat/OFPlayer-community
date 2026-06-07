@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-immersive-window-apply-mode"
+description = "Enables the immersive_window_apply_mode command without any pre-configured scope."
+commands.allow = ["immersive_window_apply_mode"]
+
+[[permission]]
+identifier = "deny-immersive-window-apply-mode"
+description = "Denies the immersive_window_apply_mode command without any pre-configured scope."
+commands.deny = ["immersive_window_apply_mode"]

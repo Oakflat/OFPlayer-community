@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-playback-load-track"
+description = "Enables the playback_load_track command without any pre-configured scope."
+commands.allow = ["playback_load_track"]
+
+[[permission]]
+identifier = "deny-playback-load-track"
+description = "Denies the playback_load_track command without any pre-configured scope."
+commands.deny = ["playback_load_track"]

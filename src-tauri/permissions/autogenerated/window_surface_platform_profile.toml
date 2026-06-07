@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-window-surface-platform-profile"
+description = "Enables the window_surface_platform_profile command without any pre-configured scope."
+commands.allow = ["window_surface_platform_profile"]
+
+[[permission]]
+identifier = "deny-window-surface-platform-profile"
+description = "Denies the window_surface_platform_profile command without any pre-configured scope."
+commands.deny = ["window_surface_platform_profile"]

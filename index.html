@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/OFplayer.svg" />
+    <title>OFplayer</title>
+    <script>
+      (() => {
+        const STARTUP_LOCALE_KEY = 'ofplayer.startup.locale'
+        const STARTUP_COLOR_SCHEME_KEY = 'ofplayer.startup.color-scheme'
+
+        const normalizeLocale = (value) => {
+          const locale = String(value ?? '').toLowerCase()
+          return locale.startsWith('zh') ? 'zh-CN' : 'en'
+        }
+
+        const resolveStartupLocale = () => {
+          try {
+            const storedLocale = window.localStorage?.getItem(STARTUP_LOCALE_KEY)
+            if (storedLocale) {
+              return normalizeLocale(storedLocale)
+            }
+          } catch {
+            // Ignore storage access issues and fall back to the browser locale.
+          }
+
+          const languages =
+            Array.isArray(navigator.languages) && navigator.languages.length > 0
+              ? navigator.languages
+              : [navigator.language]
+
+          return languages.map(normalizeLocale).find(Boolean) || 'en'
+        }
+
+        const resolveStartupColorScheme = () => {
+          try {
+            const storedScheme = window.localStorage?.getItem(STARTUP_COLOR_SCHEME_KEY)
+            if (storedScheme === 'dark' || storedScheme === 'light') {
+              return storedScheme
+            }
+          } catch {
+            // Ignore storage access issues and fall back to system preference.
+          }
+
+          return window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+        }
+
+        const startupLocale = resolveStartupLocale()
+        const startupColorScheme = resolveStartupColorScheme()
+
+        document.documentElement.lang = startupLocale
+        document.documentElement.dataset.startupLocale = startupLocale
+        document.documentElement.dataset.startupColorScheme = startupColorScheme
+        document.documentElement.style.colorScheme = startupColorScheme
+      })()
+    </script>
+    <style>
+      :root {
+        font-family:
+          "Segoe UI Variable", "Segoe UI", "PingFang SC", "Microsoft YaHei", -apple-system,
+          BlinkMacSystemFont, sans-serif;
+        background:
+          radial-gradient(circle at top, rgba(214, 223, 234, 0.55), transparent 42%),
+          radial-gradient(circle at bottom, rgba(231, 220, 226, 0.4), transparent 36%),
+          #f7f8fb;
+      }
+
+      html[data-startup-color-scheme="dark"] {
+        background: #040608;
+      }
+
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
+        background: transparent;
+      }
+
+      body {
+        overflow: hidden;
+      }
+
+      #startup-splash {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: grid;
+        place-items: center;
+        background:
+          radial-gradient(circle at top, rgba(214, 223, 234, 0.45), transparent 38%),
+          radial-gradient(circle at bottom, rgba(231, 220, 226, 0.32), transparent 34%),
+          #f7f8fb;
+        opacity: 1;
+        visibility: visible;
+        transition:
+          opacity 320ms cubic-bezier(0.2, 0, 0, 1),
+          visibility 320ms step-end;
+      }
+
+      html[data-startup-color-scheme="dark"] #startup-splash {
+        background: #040608;
+      }
+
+      #startup-splash[data-state="hidden"] {
+        opacity: 0;
+        visibility: hidden;
+      }
+
+      .startup-splash__card {
+        display: grid;
+        justify-items: center;
+        gap: 18px;
+        width: min(280px, calc(100vw - 48px));
+        padding: 32px 28px;
+        border: 1px solid rgba(18, 28, 45, 0.08);
+        border-radius: 32px;
+        background: rgba(255, 255, 255, 0.76);
+        box-shadow:
+          0 28px 70px -28px rgba(43, 56, 84, 0.32),
+          inset 0 1px 0 rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(20px);
+      }
+
+      html[data-startup-color-scheme="dark"] .startup-splash__card {
+        border-color: rgba(255, 255, 255, 0.08);
+        background: rgba(18, 24, 33, 0.78);
+        box-shadow:
+          0 28px 70px -28px rgba(0, 0, 0, 0.6),
+          inset 0 1px 0 rgba(255, 255, 255, 0.06);
+      }
+
+      .startup-splash__logo-wrap {
+        display: grid;
+        place-items: center;
+        width: 88px;
+        height: 88px;
+        border-radius: 28px;
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(243, 246, 252, 0.86));
+        box-shadow:
+          0 20px 36px -20px rgba(43, 56, 84, 0.34),
+          inset 0 1px 0 rgba(255, 255, 255, 0.96);
+      }
+
+      html[data-startup-color-scheme="dark"] .startup-splash__logo-wrap {
+        background:
+          linear-gradient(180deg, rgba(32, 40, 54, 0.92), rgba(19, 24, 34, 0.94));
+        box-shadow:
+          0 20px 36px -20px rgba(0, 0, 0, 0.48),
+          inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      }
+
+      .startup-splash__logo {
+        width: 52px;
+        height: 52px;
+        object-fit: contain;
+      }
+
+      .startup-splash__wordmark {
+        font-size: 18px;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        color: rgba(18, 28, 45, 0.88);
+      }
+
+      html[data-startup-color-scheme="dark"] .startup-splash__wordmark {
+        color: rgba(240, 243, 248, 0.92);
+      }
+
+      .startup-splash__copy {
+        font-size: 13px;
+        letter-spacing: 0.03em;
+        color: rgba(73, 84, 103, 0.72);
+      }
+
+      .startup-splash__copy [data-startup-copy] {
+        display: none;
+      }
+
+      html[data-startup-locale="en"] .startup-splash__copy [data-startup-copy="en"],
+      html[data-startup-locale="zh-CN"] .startup-splash__copy [data-startup-copy="zh-CN"] {
+        display: inline;
+      }
+
+      html[data-startup-color-scheme="dark"] .startup-splash__copy {
+        color: rgba(184, 193, 208, 0.8);
+      }
+
+      .startup-splash__bar {
+        position: relative;
+        overflow: hidden;
+        width: 100%;
+        height: 4px;
+        border-radius: 999px;
+        background: rgba(25, 32, 44, 0.08);
+      }
+
+      html[data-startup-color-scheme="dark"] .startup-splash__bar {
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      .startup-splash__bar::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        width: 36%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, #23324c, #4b6388);
+        animation: startup-splash-loading 1.45s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+      }
+
+      html[data-startup-color-scheme="dark"] .startup-splash__bar::after {
+        background: linear-gradient(90deg, #7ca6ec, #93baf9);
+      }
+
+      @keyframes startup-splash-loading {
+        0% {
+          transform: translateX(-130%);
+        }
+
+        100% {
+          transform: translateX(360%);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="startup-splash" data-state="visible" aria-hidden="true">
+      <div class="startup-splash__card">
+        <div class="startup-splash__logo-wrap">
+          <img class="startup-splash__logo" src="/OFplayer.svg" alt="" />
+        </div>
+        <div class="startup-splash__wordmark">OFPlayer</div>
+        <div class="startup-splash__copy">
+          <span data-startup-copy="en">Preparing your local library</span>
+          <span data-startup-copy="zh-CN">正在准备你的本地曲库</span>
+        </div>
+        <div class="startup-splash__bar"></div>
+      </div>
+    </div>
+    <div id="app"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

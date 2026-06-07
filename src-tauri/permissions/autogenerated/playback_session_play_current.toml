@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-playback-session-play-current"
+description = "Enables the playback_session_play_current command without any pre-configured scope."
+commands.allow = ["playback_session_play_current"]
+
+[[permission]]
+identifier = "deny-playback-session-play-current"
+description = "Denies the playback_session_play_current command without any pre-configured scope."
+commands.deny = ["playback_session_play_current"]

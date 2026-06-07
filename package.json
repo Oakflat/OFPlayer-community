@@ -1,0 +1,36 @@
+{
+  "name": "ofplayer-community-tauri",
+  "private": true,
+  "version": "26.0.3",
+  "license": "SEE LICENSE IN LICENSE",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "npm run typecheck && vite build",
+    "preview": "vite preview",
+    "typecheck": "vue-tsc --noEmit -p tsconfig.json",
+    "check:tauri-commands": "node --experimental-strip-types ./scripts/check-tauri-commands.ts",
+    "test": "npm run test:unit",
+    "test:unit": "node --experimental-strip-types --test \"src/**/*.test.ts\"",
+    "tauri": "node --experimental-strip-types ./scripts/run-tauri.ts",
+    "tauri:dev": "node --experimental-strip-types ./scripts/run-tauri.ts dev",
+    "tauri:build": "node --experimental-strip-types ./scripts/run-tauri.ts build",
+    "tauri:build:all": "node --experimental-strip-types ./scripts/run-tauri.ts build --bundles nsis msi",
+    "tauri:build:msi": "node --experimental-strip-types ./scripts/run-tauri.ts build --bundles msi"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^2.10.1",
+    "@tauri-apps/plugin-dialog": "^2.7.0",
+    "lucide-vue-next": "^1.0.0",
+    "vue": "^3.5.32"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.10.1",
+    "@types/node": "^25.9.1",
+    "@vitejs/plugin-vue": "^6.0.6",
+    "esbuild": "^0.28.0",
+    "typescript": "^6.0.3",
+    "vite": "^8.0.8",
+    "vue-tsc": "^3.2.9"
+  }
+}

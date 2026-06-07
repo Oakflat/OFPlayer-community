@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-playback-session-sync-catalog"
+description = "Enables the playback_session_sync_catalog command without any pre-configured scope."
+commands.allow = ["playback_session_sync_catalog"]
+
+[[permission]]
+identifier = "deny-playback-session-sync-catalog"
+description = "Denies the playback_session_sync_catalog command without any pre-configured scope."
+commands.deny = ["playback_session_sync_catalog"]

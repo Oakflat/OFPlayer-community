@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-capsule-release"
+description = "Enables the capsule_release command without any pre-configured scope."
+commands.allow = ["capsule_release"]
+
+[[permission]]
+identifier = "deny-capsule-release"
+description = "Denies the capsule_release command without any pre-configured scope."
+commands.deny = ["capsule_release"]

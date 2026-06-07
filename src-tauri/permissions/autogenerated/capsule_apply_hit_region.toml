@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-capsule-apply-hit-region"
+description = "Enables the capsule_apply_hit_region command without any pre-configured scope."
+commands.allow = ["capsule_apply_hit_region"]
+
+[[permission]]
+identifier = "deny-capsule-apply-hit-region"
+description = "Denies the capsule_apply_hit_region command without any pre-configured scope."
+commands.deny = ["capsule_apply_hit_region"]

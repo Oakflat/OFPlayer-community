@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-desktop-library-create"
+description = "Enables the desktop_library_create command without any pre-configured scope."
+commands.allow = ["desktop_library_create"]
+
+[[permission]]
+identifier = "deny-desktop-library-create"
+description = "Denies the desktop_library_create command without any pre-configured scope."
+commands.deny = ["desktop_library_create"]

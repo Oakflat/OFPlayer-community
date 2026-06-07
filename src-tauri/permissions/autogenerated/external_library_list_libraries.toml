@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-external-library-list-libraries"
+description = "Enables the external_library_list_libraries command without any pre-configured scope."
+commands.allow = ["external_library_list_libraries"]
+
+[[permission]]
+identifier = "deny-external-library-list-libraries"
+description = "Denies the external_library_list_libraries command without any pre-configured scope."
+commands.deny = ["external_library_list_libraries"]

@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-desktop-library-rename"
+description = "Enables the desktop_library_rename command without any pre-configured scope."
+commands.allow = ["desktop_library_rename"]
+
+[[permission]]
+identifier = "deny-desktop-library-rename"
+description = "Denies the desktop_library_rename command without any pre-configured scope."
+commands.deny = ["desktop_library_rename"]

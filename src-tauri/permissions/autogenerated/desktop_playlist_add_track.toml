@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-desktop-playlist-add-track"
+description = "Enables the desktop_playlist_add_track command without any pre-configured scope."
+commands.allow = ["desktop_playlist_add_track"]
+
+[[permission]]
+identifier = "deny-desktop-playlist-add-track"
+description = "Denies the desktop_playlist_add_track command without any pre-configured scope."
+commands.deny = ["desktop_playlist_add_track"]

@@ -1,0 +1,53 @@
+[package]
+name = "ofplayer-tauri"
+version = "26.0.3"
+description = "Local-first desktop branch for OFPlayer"
+authors = ["OFPlayer contributors"]
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+# The `_lib` suffix may seem redundant but it is necessary
+# to make the lib name unique and wouldn't conflict with the bin name.
+# This seems to be only an issue on Windows, see https://github.com/rust-lang/cargo/issues/8519
+name = "ofplayer_tauri_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[features]
+default = []
+asio-output = ["cpal/asio"]
+
+[profile.release]
+opt-level = "s"
+lto = "thin"
+codegen-units = 1
+panic = "abort"
+strip = true
+
+[dependencies]
+base64 = "0.22.1"
+chrono = { version = "0.4", default-features = false, features = ["clock"] }
+cpal = "0.16.0"
+dsd-reader = "0.3.1"
+image = { version = "0.25.8", default-features = false, features = ["bmp", "gif", "jpeg", "png", "webp"] }
+futures-util = "0.3"
+lofty = "0.24.0"
+notify = "8.2.0"
+quick-xml = "0.38.4"
+raw-window-handle = "0.6.2"
+reqwest = { version = "0.13.2", default-features = false, features = ["json", "native-tls"] }
+rodio = { version = "0.21.1", features = ["symphonia-all"] }
+rusqlite = { version = "0.37.0", features = ["bundled"] }
+rustfft = "6.2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1.0"
+souvlaki = { version = "0.8.3", default-features = false }
+tauri = { version = "2", features = ["protocol-asset"] }
+tauri-plugin-dialog = "2"
+url = "2.5.8"
+uuid = { version = "1", features = ["v4"] }
+windows = { version = "0.61.3", features = ["Media", "Win32_Foundation", "Win32_Storage_EnhancedStorage", "Win32_System_Com", "Win32_System_Com_StructuredStorage", "Win32_System_ProcessStatus", "Win32_System_Threading", "Win32_System_Variant", "Win32_System_WinRT", "Win32_UI_Shell", "Win32_UI_Shell_PropertiesSystem", "Win32_UI_WindowsAndMessaging"] }

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WixLocalization Culture="en-US" xmlns="http://schemas.microsoft.com/wix/2006/localization">
+  <String Id="LaunchApp">Launch OFPlayer</String>
+  <String Id="DowngradeErrorMessage">A newer version of OFPlayer is already installed.</String>
+  <String Id="PathEnvVarFeature">Add the OFPlayer executable install location to the PATH environment variable so it can be launched from any terminal location.</String>
+  <String Id="InstallAppFeature">Installs OFPlayer.</String>
+</WixLocalization>

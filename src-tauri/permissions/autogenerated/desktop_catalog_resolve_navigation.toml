@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-desktop-catalog-resolve-navigation"
+description = "Enables the desktop_catalog_resolve_navigation command without any pre-configured scope."
+commands.allow = ["desktop_catalog_resolve_navigation"]
+
+[[permission]]
+identifier = "deny-desktop-catalog-resolve-navigation"
+description = "Denies the desktop_catalog_resolve_navigation command without any pre-configured scope."
+commands.deny = ["desktop_catalog_resolve_navigation"]

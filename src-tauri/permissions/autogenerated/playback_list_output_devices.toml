@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-playback-list-output-devices"
+description = "Enables the playback_list_output_devices command without any pre-configured scope."
+commands.allow = ["playback_list_output_devices"]
+
+[[permission]]
+identifier = "deny-playback-list-output-devices"
+description = "Denies the playback_list_output_devices command without any pre-configured scope."
+commands.deny = ["playback_list_output_devices"]

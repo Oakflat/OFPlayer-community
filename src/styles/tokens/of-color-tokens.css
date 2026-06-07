@@ -1,0 +1,160 @@
+/**
+ * OFplayer 全局颜色 Token
+ *
+ * 包含：品牌色、中性色、语义色、音乐专属色、平台色、定价色、阴影、渐变
+ *
+ * 使用规则：
+ * 1. 组件不要直接使用 --of-* 变量，应使用 of-component-tokens.css 中的组件级变量
+ * 2. 主题文件可以覆盖 --of-brand 等变量以实现主题个性化
+ * 3. 真实色值只出现在 token 文件或主题文件中
+ */
+
+:root {
+  /* ========================================
+     品牌色 Brand
+     ======================================== */
+
+  /* 主品牌色：清透蓝，承担播放、主按钮、当前状态 */
+  --of-brand: #0EA5E9;
+  --of-brand-hover: #0284C7;
+  --of-brand-active: #0369A1;
+  --of-brand-soft: rgba(14, 165, 233, 0.12);
+  --of-brand-border: rgba(14, 165, 233, 0.28);
+
+  /* 辅助品牌色：青绿色，承担同步、连接、活跃、完成 */
+  --of-accent: #14B8A6;
+  --of-accent-hover: #0D9488;
+  --of-accent-active: #0F766E;
+  --of-accent-soft: rgba(20, 184, 166, 0.12);
+  --of-accent-border: rgba(20, 184, 166, 0.28);
+
+  /* 暖色：保留原有橙色资产，降级为营销、活动、引导 */
+  --of-warm: #FF7A3D;
+  --of-warm-hover: #F97316;
+  --of-warm-active: #EA580C;
+  --of-warm-soft: rgba(255, 122, 61, 0.14);
+  --of-warm-border: rgba(255, 122, 61, 0.3);
+
+  /* ========================================
+     中性色 Neutral
+     ======================================== */
+
+  --of-bg: #F7FAFC;
+  --of-bg-soft: #F1F5F9;
+  --of-surface: #FFFFFF;
+  --of-surface-raised: #FFFFFF;
+  --of-surface-sunken: #EEF4F8;
+  --of-border: #DDE7EE;
+  --of-divider: rgba(15, 23, 42, 0.08);
+
+  --of-ink: #111827;
+  --of-ink-soft: #334155;
+  --of-ink-muted: #64748B;
+  --of-ink-subtle: #94A3B8;
+  --of-ink-disabled: #CBD5E1;
+
+  /* ========================================
+     语义色 Semantic
+     ======================================== */
+
+  /* 危险 / 删除 / 不可逆操作 */
+  --of-danger: #FF3B30;
+  --of-danger-hover: #DC2626;
+  --of-danger-active: #B91C1C;
+  --of-danger-soft: rgba(255, 59, 48, 0.12);
+  --of-danger-border: rgba(255, 59, 48, 0.34);
+  --of-danger-text-on-fill: #FFFFFF;
+
+  /* 警告 */
+  --of-warning: #F59E0B;
+  --of-warning-hover: #D97706;
+  --of-warning-active: #B45309;
+  --of-warning-soft: rgba(245, 158, 11, 0.14);
+  --of-warning-border: rgba(245, 158, 11, 0.32);
+
+  /* 成功 */
+  --of-success: #10B981;
+  --of-success-hover: #059669;
+  --of-success-active: #047857;
+  --of-success-soft: rgba(16, 185, 129, 0.12);
+  --of-success-border: rgba(16, 185, 129, 0.3);
+
+  /* 信息 */
+  --of-info: #2563EB;
+  --of-info-hover: #1D4ED8;
+  --of-info-active: #1E40AF;
+  --of-info-soft: rgba(37, 99, 235, 0.12);
+  --of-info-border: rgba(37, 99, 235, 0.3);
+
+  /* ========================================
+     音乐产品专属语义色
+     ======================================== */
+
+  /* 当前播放 */
+  --of-playing: var(--of-brand);
+  --of-playing-soft: var(--of-brand-soft);
+  --of-playing-border: var(--of-brand-border);
+
+  /* 收藏 / 喜欢 */
+  --of-like: #FF4D8D;
+  --of-like-hover: #F43F7F;
+  --of-like-active: #DB2777;
+  --of-like-soft: rgba(255, 77, 141, 0.14);
+  --of-like-border: rgba(255, 77, 141, 0.3);
+
+  /* 高亮 / 社区层级 */
+  --of-pro: #D6A548;
+  --of-pro-hover: #C9942E;
+  --of-pro-active: #A8741E;
+  --of-pro-soft: rgba(214, 165, 72, 0.16);
+  --of-pro-border: rgba(214, 165, 72, 0.35);
+
+  /* 本地优先 / 下载 / 离线 */
+  --of-local: var(--of-warm);
+  --of-local-soft: var(--of-warm-soft);
+  --of-local-border: var(--of-warm-border);
+
+  /* ========================================
+     平台色
+     ======================================== */
+
+  --of-platform-web: var(--of-warm);
+  --of-platform-desktop: var(--of-brand);
+  --of-platform-mobile: var(--of-accent);
+  --of-platform-community: #8B5CF6;
+
+  /* ========================================
+     社区支持层级
+     ======================================== */
+
+  --of-tier-free: var(--of-ink-soft);
+  --of-tier-plus: var(--of-brand);
+  --of-tier-pro: var(--of-pro);
+  --of-tier-lifetime: var(--of-warm);
+
+  /* ========================================
+     阴影
+     ======================================== */
+
+  --of-shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
+  --of-shadow-md: 0 8px 24px rgba(15, 23, 42, 0.08);
+  --of-shadow-lg: 0 18px 48px rgba(15, 23, 42, 0.12);
+
+  --of-glow-brand: 0 0 24px rgba(14, 165, 233, 0.24);
+  --of-glow-like: 0 0 24px rgba(255, 77, 141, 0.22);
+  --of-glow-danger: 0 0 24px rgba(255, 59, 48, 0.22);
+
+  /* ========================================
+     渐变
+     ======================================== */
+
+  --of-page-gradient:
+    radial-gradient(circle at 18% 12%, rgba(14, 165, 233, 0.12), transparent 32%),
+    radial-gradient(circle at 82% 88%, rgba(255, 122, 61, 0.10), transparent 34%),
+    linear-gradient(180deg, #FFFFFF 0%, #F7FAFC 100%);
+
+  --of-player-gradient:
+    radial-gradient(circle at 20% 20%, rgba(14, 165, 233, 0.18), transparent 36%),
+    radial-gradient(circle at 80% 80%, rgba(255, 77, 141, 0.14), transparent 38%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.88), rgba(247, 250, 252, 0.78));
+}

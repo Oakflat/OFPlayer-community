@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-desktop-external-library-delete-connection"
+description = "Enables the desktop_external_library_delete_connection command without any pre-configured scope."
+commands.allow = ["desktop_external_library_delete_connection"]
+
+[[permission]]
+identifier = "deny-desktop-external-library-delete-connection"
+description = "Denies the desktop_external_library_delete_connection command without any pre-configured scope."
+commands.deny = ["desktop_external_library_delete_connection"]

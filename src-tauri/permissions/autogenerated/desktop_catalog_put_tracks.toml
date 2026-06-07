@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-desktop-catalog-put-tracks"
+description = "Enables the desktop_catalog_put_tracks command without any pre-configured scope."
+commands.allow = ["desktop_catalog_put_tracks"]
+
+[[permission]]
+identifier = "deny-desktop-catalog-put-tracks"
+description = "Denies the desktop_catalog_put_tracks command without any pre-configured scope."
+commands.deny = ["desktop_catalog_put_tracks"]

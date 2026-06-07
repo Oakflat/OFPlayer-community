@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-mobile-handoff-record-event"
+description = "Enables the mobile_handoff_record_event command without any pre-configured scope."
+commands.allow = ["mobile_handoff_record_event"]
+
+[[permission]]
+identifier = "deny-mobile-handoff-record-event"
+description = "Denies the mobile_handoff_record_event command without any pre-configured scope."
+commands.deny = ["mobile_handoff_record_event"]

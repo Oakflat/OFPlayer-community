@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-capsule-create-window"
+description = "Enables the capsule_create_window command without any pre-configured scope."
+commands.allow = ["capsule_create_window"]
+
+[[permission]]
+identifier = "deny-capsule-create-window"
+description = "Denies the capsule_create_window command without any pre-configured scope."
+commands.deny = ["capsule_create_window"]

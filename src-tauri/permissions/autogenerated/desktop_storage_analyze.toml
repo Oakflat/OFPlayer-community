@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-desktop-storage-analyze"
+description = "Enables the desktop_storage_analyze command without any pre-configured scope."
+commands.allow = ["desktop_storage_analyze"]
+
+[[permission]]
+identifier = "deny-desktop-storage-analyze"
+description = "Denies the desktop_storage_analyze command without any pre-configured scope."
+commands.deny = ["desktop_storage_analyze"]

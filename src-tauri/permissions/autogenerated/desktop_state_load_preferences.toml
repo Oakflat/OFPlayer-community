@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-desktop-state-load-preferences"
+description = "Enables the desktop_state_load_preferences command without any pre-configured scope."
+commands.allow = ["desktop_state_load_preferences"]
+
+[[permission]]
+identifier = "deny-desktop-state-load-preferences"
+description = "Denies the desktop_state_load_preferences command without any pre-configured scope."
+commands.deny = ["desktop_state_load_preferences"]

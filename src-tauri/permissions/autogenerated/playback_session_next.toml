@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-playback-session-next"
+description = "Enables the playback_session_next command without any pre-configured scope."
+commands.allow = ["playback_session_next"]
+
+[[permission]]
+identifier = "deny-playback-session-next"
+description = "Denies the playback_session_next command without any pre-configured scope."
+commands.deny = ["playback_session_next"]

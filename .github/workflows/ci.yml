@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - dev
+
+jobs:
+  quality:
+    name: Quality gates
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Setup Rust
+        run: |
+          rustup toolchain install stable --profile minimal
+          rustup component add rustfmt clippy --toolchain stable
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Check Tauri command chain
+        run: npm run check:tauri-commands
+
+      - name: Run frontend unit tests
+        run: npm test
+
+      - name: Build frontend
+        run: npm run build
+
+      - name: Rust format
+        working-directory: src-tauri
+        run: cargo fmt --all -- --check
+
+      - name: Rust check
+        working-directory: src-tauri
+        run: cargo check --locked
+
+      - name: Rust test
+        working-directory: src-tauri
+        run: cargo test --locked
+
+      - name: Rust clippy
+        working-directory: src-tauri
+        run: cargo clippy --locked --all-targets -- -D warnings

@@ -1,0 +1,197 @@
+/**
+ * Paper 纸感主题样式
+ * 纸张质感的优雅设计
+ */
+
+/* Paper 主题变量 */
+html:not([data-effective-color-scheme="dark"])[data-theme="paper"] {
+  /* ===== 核心颜色系统 - 纸质基调 ===== */
+  --ink: var(--of-ink);
+  --ink-soft: var(--of-ink-soft);
+  --ink-muted: var(--of-ink-muted);
+  --ink-subtle: var(--of-ink-subtle);
+
+  /* 主色系统 - 使用墨色作为主色 */
+  --primary: var(--of-brand);
+  --primary-light: var(--of-brand-hover);
+  --primary-dark: var(--of-brand-active);
+  --primary-container: var(--of-brand-soft);
+  --on-primary: var(--of-btn-primary-text);
+
+  /* ===== 状态色系统 ===== */
+  --color-playing: var(--of-playing);
+  --color-playing-bg: var(--of-playing-soft);
+  --color-playing-border: var(--of-playing-border);
+  --color-error: var(--of-danger);
+  --color-error-bg: var(--of-danger-soft);
+  --color-error-border: var(--of-danger-border);
+  --color-success: var(--of-success);
+  --color-success-bg: var(--of-success-soft);
+
+  /* ===== 边框颜色 ===== */
+  --line: var(--of-border);
+  --line-soft: var(--of-divider);
+  --line-strong: color-mix(in srgb, var(--of-border) 68%, var(--of-ink) 32%);
+
+  /* ===== 表面颜色 - 简化色阶 ===== */
+  --surface-base: var(--of-surface-shell);
+  --surface-elevated: var(--of-surface-main);
+  --surface-overlay: var(--of-surface-panel);
+  --surface-solid: var(--of-surface-raised);
+  --surface-soft: var(--of-surface-card);
+  --surface-soft-hover: var(--of-surface-hover);
+  --surface-soft-active: var(--of-surface-active);
+
+  /* ===== 交互状态 ===== */
+  --focus-ring: var(--of-focus-ring);
+  --selection-bg: var(--of-selection-bg);
+  --state-layer-hover: var(--of-state-layer-hover);
+  --state-layer-pressed: var(--of-state-layer-pressed);
+
+  /* ===== 内部装饰 - 简化 ===== */
+  --border-inner: rgba(255, 255, 255, 0.9);
+
+  /* ===== 阴影系统 - 简化 ===== */
+  --shadow-lg: var(--of-shadow-lg);
+  --shadow-md: var(--of-shadow-md);
+  --shadow-sm: var(--of-shadow-sm);
+
+  /* ===== 圆角 - 更柔和 ===== */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.25rem;
+
+  /* ===== 滚动条 ===== */
+  --scrollbar-thumb-idle: var(--of-scrollbar-idle);
+  --scrollbar-thumb-hover: var(--of-scrollbar-hover);
+  --scrollbar-thumb-active: var(--of-scrollbar-active);
+}
+
+/* Paper 特殊样式 - 简化 */
+html:not([data-effective-color-scheme="dark"])[data-theme="paper"]:not([data-window-surface="native-glass"]) {
+  background:
+    radial-gradient(ellipse at 25% 25%, rgba(220, 215, 200, 0.08), transparent 50%),
+    radial-gradient(ellipse at 75% 75%, rgba(200, 195, 180, 0.06), transparent 45%),
+    #f5f5f3;
+}
+
+html:not([data-effective-color-scheme="dark"])[data-theme="paper"] .player-shell {
+  background: var(--surface-base);
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--line);
+}
+
+html:not([data-effective-color-scheme="dark"])[data-theme="paper"] .panel-sidebar {
+  background: var(--surface-overlay);
+  border-right: 1px solid var(--line);
+}
+
+html:not([data-effective-color-scheme="dark"])[data-theme="paper"] .song-item:hover {
+  background: var(--state-layer-hover);
+}
+
+html:not([data-effective-color-scheme="dark"])[data-theme="paper"] .song-item.is-active {
+  background: var(--state-layer-pressed);
+}
+
+/* Paper 主题按钮样式 */
+html:not([data-effective-color-scheme="dark"])[data-theme="paper"] .button-primary {
+  background: var(--primary);
+  color: var(--on-primary);
+  border: none;
+}
+
+html:not([data-effective-color-scheme="dark"])[data-theme="paper"] .button-secondary {
+  background: transparent;
+  color: var(--primary);
+  border: 1px solid var(--line-strong);
+}
+
+/* Paper 主题输入框 */
+html:not([data-effective-color-scheme="dark"])[data-theme="paper"] input[type="text"],
+html:not([data-effective-color-scheme="dark"])[data-theme="paper"] input[type="search"] {
+  background: var(--surface-elevated);
+  border: 1px solid var(--line);
+  color: var(--ink);
+}
+
+html:not([data-effective-color-scheme="dark"])[data-theme="paper"] input[type="text"]:focus,
+html:not([data-effective-color-scheme="dark"])[data-theme="paper"] input[type="search"]:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px var(--primary-container);
+}
+
+/* 原生玻璃窗口 - 与 Material 保持同一套壳体分区，只调整纸感色调 */
+html:not([data-effective-color-scheme="dark"])[data-theme="paper"][data-window-surface="native-glass"] {
+  --surface-app: rgba(246, 241, 234, 0.1);
+  --surface-shell: rgba(247, 243, 237, 0.84);
+  --surface-main: rgba(255, 253, 249, 0.9);
+  --surface-sub: rgba(248, 244, 238, 0.78);
+  --surface-soft: rgba(244, 239, 232, 0.82);
+  --surface-base: rgba(250, 247, 242, 0.84);
+  --surface-elevated: rgba(255, 255, 252, 0.93);
+  --surface-overlay: rgba(248, 244, 238, 0.78);
+  --surface-solid: rgba(255, 252, 247, 0.96);
+  --line: rgba(80, 66, 52, 0.14);
+  --line-soft: rgba(80, 66, 52, 0.08);
+  --line-strong: rgba(80, 66, 52, 0.2);
+  --border-inner: rgba(255, 255, 255, 0.22);
+  --shadow-lg: 0 24px 48px -14px rgba(80, 66, 52, 0.13);
+  --shadow-md: 0 10px 24px -10px rgba(80, 66, 52, 0.1);
+  --shadow-sm: 0 2px 10px -3px rgba(80, 66, 52, 0.08);
+  --color-playing: var(--of-playing);
+  --color-playing-bg: var(--of-playing-soft);
+  --color-playing-border: var(--of-playing-border);
+}
+
+html:not([data-effective-color-scheme="dark"])[data-theme="paper"][data-window-surface="native-glass"] .app-window {
+  background: transparent;
+}
+
+html:not([data-effective-color-scheme="dark"])[data-theme="paper"][data-window-surface="native-glass"] .app-window::before {
+  background: var(--surface-app);
+}
+
+html:not([data-effective-color-scheme="dark"])[data-theme="paper"][data-window-surface="native-glass"] .player-shell {
+  background: var(--surface-shell);
+  border-radius: var(--radius-xl);
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  border: none;
+  backdrop-filter: blur(42px) saturate(0.98);
+}
+
+html:not([data-effective-color-scheme="dark"])[data-theme="paper"][data-window-surface="native-glass"] .panel-sidebar {
+  background: var(--surface-sub);
+  backdrop-filter: blur(32px) saturate(0.96);
+}
+
+html:not([data-effective-color-scheme="dark"])[data-theme="paper"][data-window-surface="native-glass"] .panel-player {
+  background: var(--surface-main);
+  backdrop-filter: blur(32px) saturate(0.96);
+}
+
+html:not([data-effective-color-scheme="dark"])[data-theme="paper"][data-window-surface="native-glass"] .playback-dock {
+  background: var(--surface-elevated);
+  backdrop-filter: blur(32px) saturate(0.96);
+}
+
+html:not([data-effective-color-scheme="dark"])[data-theme="paper"][data-window-surface="native-glass"] :is(
+  .library-toolbar-select,
+  .library-toolbar-dropdown,
+  .sidebar-action,
+  .sidebar-settings,
+  .track-inspector,
+  .settings-modal,
+  .settings-panel-card,
+  .settings-choice,
+  .settings-select,
+  .settings-select-dropdown
+) {
+  background: var(--surface-elevated);
+  backdrop-filter: blur(24px) saturate(0.96);
+}
+
+

@@ -1,0 +1,162 @@
+/**
+ * Mist 主题样式
+ * 薄雾般的现代感设计
+ */
+
+/* Mist 主题变量 */
+html:not([data-effective-color-scheme="dark"])[data-theme="mist"] {
+  /* ===== 核心颜色系统 ===== */
+  --ink: var(--of-ink);
+  --ink-soft: var(--of-ink-soft);
+  --ink-muted: var(--of-ink-muted);
+  --ink-subtle: var(--of-ink-subtle);
+
+  /* 主色系统 - 使用深灰作为主色，更低调 */
+  --primary: var(--of-brand);
+  --primary-light: var(--of-brand-hover);
+  --primary-dark: var(--of-brand-active);
+  --primary-container: var(--of-brand-soft);
+  --on-primary: var(--of-btn-primary-text);
+
+  /* ===== 状态色系统 ===== */
+  --color-playing: var(--of-playing);
+  --color-playing-bg: var(--of-playing-soft);
+  --color-playing-border: var(--of-playing-border);
+  --color-error: var(--of-danger);
+  --color-error-bg: var(--of-danger-soft);
+  --color-error-border: var(--of-danger-border);
+  --color-success: var(--of-success);
+  --color-success-bg: var(--of-success-soft);
+
+  /* ===== 边框颜色 ===== */
+  --line: var(--of-border);
+  --line-soft: var(--of-divider);
+  --line-strong: color-mix(in srgb, var(--of-border) 68%, var(--of-ink) 32%);
+
+  /* ===== 表面颜色 - 简化色阶 ===== */
+  --surface-base: var(--of-surface-shell);
+  --surface-elevated: var(--of-surface-main);
+  --surface-overlay: var(--of-surface-panel);
+  --surface-solid: var(--of-surface-raised);
+  --surface-soft: var(--of-surface-card);
+  --surface-soft-hover: var(--of-surface-hover);
+  --surface-soft-active: var(--of-surface-active);
+
+  /* ===== 交互状态 ===== */
+  --focus-ring: var(--of-focus-ring);
+  --selection-bg: var(--of-selection-bg);
+  --state-layer-hover: var(--of-state-layer-hover);
+  --state-layer-pressed: var(--of-state-layer-pressed);
+
+  /* ===== 内部装饰 - 简化 ===== */
+  --border-inner: rgba(255, 255, 255, 0.6);
+
+  /* ===== 阴影系统 - 简化 ===== */
+  --shadow-lg: var(--of-shadow-lg);
+  --shadow-md: var(--of-shadow-md);
+  --shadow-sm: var(--of-shadow-sm);
+
+  /* ===== 圆角 ===== */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.25rem;
+
+  /* ===== 滚动条 ===== */
+  --scrollbar-thumb-idle: var(--of-scrollbar-idle);
+  --scrollbar-thumb-hover: var(--of-scrollbar-hover);
+  --scrollbar-thumb-active: var(--of-scrollbar-active);
+}
+
+/* Mist 特殊样式 - 简化 */
+html:not([data-effective-color-scheme="dark"])[data-theme="mist"] .player-shell {
+  background: var(--surface-base);
+  backdrop-filter: blur(12px);
+}
+
+html:not([data-effective-color-scheme="dark"])[data-theme="mist"] .panel-sidebar {
+  background: var(--surface-overlay);
+  backdrop-filter: blur(12px);
+}
+
+/* Mist 背景效果 - 微妙的雾感 */
+html:not([data-effective-color-scheme="dark"])[data-theme="mist"]:not([data-window-surface="native-glass"]) {
+  background:
+    radial-gradient(ellipse at 30% 20%, rgba(200, 210, 230, 0.15), transparent 60%),
+    radial-gradient(ellipse at 70% 80%, rgba(180, 195, 210, 0.1), transparent 55%),
+    #f5f7fa;
+}
+
+/* 原生玻璃窗口 - 与 Material 保持同一套壳体分区，只调整雾感色调 */
+html:not([data-effective-color-scheme="dark"])[data-theme="mist"][data-window-surface="native-glass"] {
+  --surface-app: rgba(232, 239, 247, 0.1);
+  --surface-shell: rgba(235, 241, 248, 0.82);
+  --surface-main: rgba(251, 253, 255, 0.88);
+  --surface-sub: rgba(242, 247, 252, 0.76);
+  --surface-soft: rgba(239, 245, 250, 0.8);
+  --surface-base: rgba(246, 250, 253, 0.82);
+  --surface-elevated: rgba(255, 255, 255, 0.92);
+  --surface-overlay: rgba(242, 247, 252, 0.76);
+  --surface-solid: rgba(250, 253, 255, 0.96);
+  --line: rgba(54, 70, 90, 0.15);
+  --line-soft: rgba(54, 70, 90, 0.08);
+  --line-strong: rgba(54, 70, 90, 0.2);
+  --border-inner: rgba(255, 255, 255, 0.18);
+  --shadow-lg: 0 24px 48px -14px rgba(54, 70, 90, 0.14);
+  --shadow-md: 0 10px 24px -10px rgba(54, 70, 90, 0.1);
+  --shadow-sm: 0 2px 10px -3px rgba(54, 70, 90, 0.08);
+  --color-playing: var(--of-playing);
+  --color-playing-bg: var(--of-playing-soft);
+  --color-playing-border: var(--of-playing-border);
+}
+
+html:not([data-effective-color-scheme="dark"])[data-theme="mist"][data-window-surface="native-glass"] .app-window {
+  background: transparent;
+}
+
+html:not([data-effective-color-scheme="dark"])[data-theme="mist"][data-window-surface="native-glass"] .app-window::before {
+  background: var(--surface-app);
+}
+
+html:not([data-effective-color-scheme="dark"])[data-theme="mist"][data-window-surface="native-glass"] .player-shell {
+  background: var(--surface-shell);
+  border-radius: var(--radius-xl);
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  border: none;
+  backdrop-filter: blur(46px) saturate(1.12);
+}
+
+html:not([data-effective-color-scheme="dark"])[data-theme="mist"][data-window-surface="native-glass"] .panel-sidebar {
+  background: var(--surface-sub);
+  backdrop-filter: blur(36px) saturate(1.1);
+}
+
+html:not([data-effective-color-scheme="dark"])[data-theme="mist"][data-window-surface="native-glass"] .panel-player {
+  background: var(--surface-main);
+  backdrop-filter: blur(36px) saturate(1.1);
+}
+
+html:not([data-effective-color-scheme="dark"])[data-theme="mist"][data-window-surface="native-glass"] .playback-dock {
+  background: var(--surface-elevated);
+  backdrop-filter: blur(36px) saturate(1.1);
+}
+
+html:not([data-effective-color-scheme="dark"])[data-theme="mist"][data-window-surface="native-glass"] :is(
+  .library-toolbar-select,
+  .library-toolbar-dropdown,
+  .sidebar-action,
+  .sidebar-settings,
+  .track-inspector,
+  .settings-modal,
+  .settings-panel-card,
+  .settings-choice,
+  .settings-select,
+  .settings-select-dropdown
+) {
+  background: var(--surface-elevated);
+  backdrop-filter: blur(28px) saturate(1.08);
+}
+
+

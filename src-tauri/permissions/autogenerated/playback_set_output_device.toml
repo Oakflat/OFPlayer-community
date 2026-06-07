@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-playback-set-output-device"
+description = "Enables the playback_set_output_device command without any pre-configured scope."
+commands.allow = ["playback_set_output_device"]
+
+[[permission]]
+identifier = "deny-playback-set-output-device"
+description = "Denies the playback_set_output_device command without any pre-configured scope."
+commands.deny = ["playback_set_output_device"]

@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-metadata-parse-audio-file"
+description = "Enables the metadata_parse_audio_file command without any pre-configured scope."
+commands.allow = ["metadata_parse_audio_file"]
+
+[[permission]]
+identifier = "deny-metadata-parse-audio-file"
+description = "Denies the metadata_parse_audio_file command without any pre-configured scope."
+commands.deny = ["metadata_parse_audio_file"]

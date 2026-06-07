@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-external-library-resolve-playback-source"
+description = "Enables the external_library_resolve_playback_source command without any pre-configured scope."
+commands.allow = ["external_library_resolve_playback_source"]
+
+[[permission]]
+identifier = "deny-external-library-resolve-playback-source"
+description = "Denies the external_library_resolve_playback_source command without any pre-configured scope."
+commands.deny = ["external_library_resolve_playback_source"]

@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-diagnostics-log-event"
+description = "Enables the diagnostics_log_event command without any pre-configured scope."
+commands.allow = ["diagnostics_log_event"]
+
+[[permission]]
+identifier = "deny-diagnostics-log-event"
+description = "Denies the diagnostics_log_event command without any pre-configured scope."
+commands.deny = ["diagnostics_log_event"]

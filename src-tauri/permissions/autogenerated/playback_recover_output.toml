@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-playback-recover-output"
+description = "Enables the playback_recover_output command without any pre-configured scope."
+commands.allow = ["playback_recover_output"]
+
+[[permission]]
+identifier = "deny-playback-recover-output"
+description = "Denies the playback_recover_output command without any pre-configured scope."
+commands.deny = ["playback_recover_output"]

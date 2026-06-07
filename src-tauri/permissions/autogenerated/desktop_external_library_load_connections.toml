@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-desktop-external-library-load-connections"
+description = "Enables the desktop_external_library_load_connections command without any pre-configured scope."
+commands.allow = ["desktop_external_library_load_connections"]
+
+[[permission]]
+identifier = "deny-desktop-external-library-load-connections"
+description = "Denies the desktop_external_library_load_connections command without any pre-configured scope."
+commands.deny = ["desktop_external_library_load_connections"]

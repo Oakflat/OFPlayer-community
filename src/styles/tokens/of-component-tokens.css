@@ -1,0 +1,181 @@
+/**
+ * OFplayer 组件级 Token
+ *
+ * 组件应使用这些变量，而不是直接使用 --of-* 语义变量
+ * 这样可以在不修改组件的情况下调整组件的视觉表现
+ */
+
+:root {
+  /* ========================================
+     按钮 Buttons
+     ======================================== */
+
+  /* 主按钮 */
+  --of-btn-primary-bg: var(--of-brand);
+  --of-btn-primary-bg-hover: var(--of-brand-hover);
+  --of-btn-primary-bg-active: var(--of-brand-active);
+  --of-btn-primary-text: #FFFFFF;
+
+  /* 次按钮 */
+  --of-btn-secondary-bg: var(--of-surface);
+  --of-btn-secondary-bg-hover: var(--of-bg-soft);
+  --of-btn-secondary-text: var(--of-ink-soft);
+  --of-btn-secondary-text-hover: var(--of-ink);
+  --of-btn-secondary-border: var(--of-border);
+
+  /* 危险按钮 */
+  --of-btn-danger-bg: var(--of-danger);
+  --of-btn-danger-bg-hover: var(--of-danger-hover);
+  --of-btn-danger-bg-active: var(--of-danger-active);
+  --of-btn-danger-text: var(--of-danger-text-on-fill);
+
+  /* 危险按钮（柔和） */
+  --of-btn-danger-soft-bg: var(--of-danger-soft);
+  --of-btn-danger-soft-text: var(--of-danger);
+  --of-btn-danger-soft-border: var(--of-danger-border);
+
+  /* ========================================
+     播放器 Player
+     ======================================== */
+
+  /* 当前播放项 */
+  --of-player-current-text: var(--of-playing);
+  --of-player-current-bg: var(--of-playing-soft);
+  --of-player-current-border: var(--of-playing-border);
+
+  /* 播放进度 */
+  --of-player-progress: var(--of-playing);
+  --of-player-progress-bg: var(--of-border);
+
+  /* 播放控制 */
+  --of-player-control-text: var(--of-ink-muted);
+  --of-player-control-text-hover: var(--of-playing);
+  --of-player-control-bg-hover: var(--of-playing-soft);
+
+  /* ========================================
+     收藏 / 喜欢 Like
+     ======================================== */
+
+  --of-like-button-text: var(--of-ink-muted);
+  --of-like-button-text-active: var(--of-like);
+  --of-like-button-bg-active: var(--of-like-soft);
+  --of-like-button-border-active: var(--of-like-border);
+
+  /* ========================================
+     Highlight badge
+     ======================================== */
+
+  --of-badge-pro-text: var(--of-pro);
+  --of-badge-pro-bg: var(--of-pro-soft);
+  --of-badge-pro-border: var(--of-pro-border);
+
+  /* ========================================
+     卡片 Cards
+     ======================================== */
+
+  --of-card-bg: var(--of-surface);
+  --of-card-bg-hover: var(--of-surface-raised);
+  --of-card-border: var(--of-border);
+  --of-card-shadow: var(--of-shadow-sm);
+  --of-card-shadow-hover: var(--of-shadow-md);
+
+  /* ========================================
+     弹窗 Dialogs
+     ======================================== */
+
+  --of-dialog-bg: var(--of-surface);
+  --of-dialog-header-bg: var(--of-ink);
+  --of-dialog-header-text: #FFFFFF;
+  --of-dialog-border: var(--of-border);
+  --of-dialog-shadow: var(--of-shadow-lg);
+  --of-dialog-overlay: rgba(0, 0, 0, 0.5);
+
+  /* ========================================
+     输入框 Inputs
+     ======================================== */
+
+  --of-input-bg: var(--of-surface-sunken);
+  --of-input-bg-focus: var(--of-surface);
+  --of-input-border: var(--of-border);
+  --of-input-border-focus: var(--of-brand);
+  --of-input-text: var(--of-ink);
+  --of-input-placeholder: var(--of-ink-subtle);
+
+  /* ========================================
+     文档渲染 Markdown
+     ======================================== */
+
+  --of-md-note: var(--of-info);
+  --of-md-note-bg: var(--of-info-soft);
+  --of-md-note-border: var(--of-info-border);
+
+  --of-md-tip: var(--of-success);
+  --of-md-tip-bg: var(--of-success-soft);
+  --of-md-tip-border: var(--of-success-border);
+
+  --of-md-warning: var(--of-warning);
+  --of-md-warning-bg: var(--of-warning-soft);
+  --of-md-warning-border: var(--of-warning-border);
+
+  --of-md-caution: var(--of-danger);
+  --of-md-caution-bg: var(--of-danger-soft);
+  --of-md-caution-border: var(--of-danger-border);
+
+  --of-md-important: var(--of-brand);
+  --of-md-important-bg: var(--of-brand-soft);
+  --of-md-important-border: var(--of-brand-border);
+
+  /* ========================================
+     侧栏 Sidebar
+     ======================================== */
+
+  --of-sidebar-bg: var(--of-surface);
+  --of-sidebar-border: var(--of-border);
+  --of-sidebar-item-text: var(--of-ink-soft);
+  --of-sidebar-item-text-active: var(--of-ink);
+  --of-sidebar-item-bg-active: var(--of-brand-soft);
+
+  /* ========================================
+     歌曲列表 Track List
+     ======================================== */
+
+  --of-track-bg: transparent;
+  --of-track-bg-hover: var(--of-bg-soft);
+  --of-track-bg-active: var(--of-playing-soft);
+  --of-track-border-active: var(--of-playing-border);
+  --of-track-text: var(--of-ink);
+  --of-track-text-secondary: var(--of-ink-muted);
+
+  /* ========================================
+     平台标签 Platform Tags
+     ======================================== */
+
+  --of-tag-web: var(--of-platform-web);
+  --of-tag-desktop: var(--of-platform-desktop);
+  --of-tag-mobile: var(--of-platform-mobile);
+  --of-tag-community: var(--of-platform-community);
+
+  /* ========================================
+     定价层级 Pricing Tiers
+     ======================================== */
+
+  --of-pricing-free: var(--of-tier-free);
+  --of-pricing-plus: var(--of-tier-plus);
+  --of-pricing-pro: var(--of-tier-pro);
+  --of-pricing-lifetime: var(--of-tier-lifetime);
+
+  /* ========================================
+     滚动条 Scrollbar
+     ======================================== */
+
+  --of-scrollbar-idle: rgba(0, 0, 0, 0);
+  --of-scrollbar-hover: rgba(0, 0, 0, 0.2);
+  --of-scrollbar-active: rgba(0, 0, 0, 0.35);
+}
+
+/* 深色模式滚动条 */
+html[data-effective-color-scheme="dark"] {
+  --of-scrollbar-idle: rgba(255, 255, 255, 0);
+  --of-scrollbar-hover: rgba(255, 255, 255, 0.2);
+  --of-scrollbar-active: rgba(255, 255, 255, 0.35);
+}

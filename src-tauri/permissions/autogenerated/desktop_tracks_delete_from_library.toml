@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-desktop-tracks-delete-from-library"
+description = "Enables the desktop_tracks_delete_from_library command without any pre-configured scope."
+commands.allow = ["desktop_tracks_delete_from_library"]
+
+[[permission]]
+identifier = "deny-desktop-tracks-delete-from-library"
+description = "Denies the desktop_tracks_delete_from_library command without any pre-configured scope."
+commands.deny = ["desktop_tracks_delete_from_library"]

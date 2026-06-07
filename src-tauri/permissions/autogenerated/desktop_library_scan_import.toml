@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-desktop-library-scan-import"
+description = "Enables the desktop_library_scan_import command without any pre-configured scope."
+commands.allow = ["desktop_library_scan_import"]
+
+[[permission]]
+identifier = "deny-desktop-library-scan-import"
+description = "Denies the desktop_library_scan_import command without any pre-configured scope."
+commands.deny = ["desktop_library_scan_import"]

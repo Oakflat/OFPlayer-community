@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-desktop-library-reorder"
+description = "Enables the desktop_library_reorder command without any pre-configured scope."
+commands.allow = ["desktop_library_reorder"]
+
+[[permission]]
+identifier = "deny-desktop-library-reorder"
+description = "Denies the desktop_library_reorder command without any pre-configured scope."
+commands.deny = ["desktop_library_reorder"]

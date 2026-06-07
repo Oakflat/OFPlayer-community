@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-capsule-get-boot-state"
+description = "Enables the capsule_get_boot_state command without any pre-configured scope."
+commands.allow = ["capsule_get_boot_state"]
+
+[[permission]]
+identifier = "deny-capsule-get-boot-state"
+description = "Denies the capsule_get_boot_state command without any pre-configured scope."
+commands.deny = ["capsule_get_boot_state"]

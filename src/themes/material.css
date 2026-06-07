@@ -1,0 +1,414 @@
+/**
+ * Material Design 主题样式
+ * 大胆鲜明的 Material Design 3 风格 - 实色背景
+ * 配色参考 Google Material Design 规范
+ */
+
+/* Material 主题变量 */
+html:not([data-effective-color-scheme="dark"])[data-theme="material"] {
+  /* ===== 核心颜色系统 ===== */
+  --ink: var(--of-ink);
+  --ink-soft: var(--of-ink-soft);
+  --ink-muted: var(--of-ink-muted);
+  --ink-subtle: var(--of-ink-subtle);
+
+  /* 主色系统 - Primary Purple */
+  --primary: var(--of-brand);
+  --primary-light: var(--of-brand-hover);
+  --primary-dark: var(--of-brand-active);
+  --primary-container: var(--of-brand-soft);
+  --on-primary: var(--of-btn-primary-text);
+
+  /* 强调色系统 - Coral 撞色 */
+  --accent: var(--of-warm);
+  --accent-hover: var(--of-warm-hover);
+  --accent-soft: var(--of-warm-soft);
+  --accent-deep: var(--of-warm-active);
+
+  /* 次要色 */
+  --secondary: #625B71;
+  --secondary-light: #CCC2DC;
+  --secondary-dark: #332D41;
+  --secondary-container: #E8DEF8;
+
+  /* ===== 状态色系统 - 使用珊瑚撞色 ===== */
+  --color-playing: var(--of-playing);
+  --color-playing-bg: var(--of-playing-soft);
+  --color-playing-border: var(--of-playing-border);
+  --color-error: var(--of-danger);
+  --color-error-bg: var(--of-danger-soft);
+  --color-error-border: var(--of-danger-border);
+  --color-success: var(--of-success);
+  --color-success-bg: var(--of-success-soft);
+
+  /* ===== 边框颜色 - Material 特色 ===== */
+  --line: var(--of-border);
+  --line-soft: var(--of-divider);
+  --line-strong: color-mix(in srgb, var(--of-border) 68%, var(--of-ink) 32%);
+  --material-settings-outline: rgba(103, 80, 164, 0.14);
+  --material-settings-outline-soft: rgba(103, 80, 164, 0.1);
+  --material-settings-outline-inner: rgba(103, 80, 164, 0.045);
+
+  /* ===== 表面颜色 - Google 配色参考 ===== */
+  --surface-app: var(--of-bg);       /* App Background - 最外层 */
+  --surface-shell: var(--of-surface-shell);     /* Shell / Outer Background */
+  --surface-main: var(--of-surface-main);      /* Main Surface - 右侧主面板 */
+  --surface-sub: var(--of-surface-sidebar);       /* Sub Surface - 左侧边栏 */
+  --surface-soft: var(--of-surface-hover);      /* Surface Soft - hover/soft */
+
+  /* 兼容变量映射 */
+  --surface-base: var(--of-surface-shell);
+  --surface-elevated: var(--of-surface-main);
+  --surface-overlay: var(--of-surface-panel);
+  --surface-solid: var(--of-surface-raised);
+  --surface-soft-hover: var(--of-surface-hover);
+  --surface-soft-active: var(--of-surface-active);
+
+  /* ===== 交互状态 - 紫色 + 珊瑚撞色 ===== */
+  --focus-ring: var(--of-focus-ring);
+  --selection-bg: var(--of-selection-bg);
+  --state-layer-hover: var(--of-state-layer-hover);
+  --state-layer-pressed: var(--of-state-layer-pressed);
+  --state-layer-accent: var(--of-warm-soft);
+
+  /* ===== 内部装饰 ===== */
+  --border-inner: rgba(255, 255, 255, 0.95);
+
+  /* ===== 阴影系统 - 带紫色调 ===== */
+  --shadow-lg: var(--of-shadow-lg);
+  --shadow-md: var(--of-shadow-md);
+  --shadow-sm: var(--of-shadow-sm);
+  --shadow-accent: var(--of-glow-brand);
+
+  /* ===== 圆角 ===== */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.25rem;
+
+  /* ===== 滚动条 ===== */
+  --scrollbar-thumb-idle: var(--of-scrollbar-idle);
+  --scrollbar-thumb-hover: var(--of-scrollbar-hover);
+  --scrollbar-thumb-active: var(--of-scrollbar-active);
+}
+
+/* 覆盖全局背景 - Material 特色 */
+html:not([data-effective-color-scheme="dark"])[data-theme="material"]:not([data-window-surface="native-glass"]) {
+  background: var(--surface-app);
+}
+
+/* Material 特殊样式 - 实色背景，无毛玻璃 */
+html:not([data-effective-color-scheme="dark"])[data-theme="material"] .player-shell {
+  background: var(--surface-shell);
+  box-shadow: var(--shadow-lg);
+  border-radius: var(--radius-xl);
+  border: none;
+  backdrop-filter: none;
+}
+
+html:not([data-effective-color-scheme="dark"])[data-theme="material"] .panel-sidebar {
+  background: var(--surface-sub);
+  border-right: 1px solid var(--line-soft);
+}
+
+html:not([data-effective-color-scheme="dark"])[data-theme="material"] .panel-player {
+  background: var(--surface-main);
+}
+
+/* Material 按钮样式 - 撞色设计 */
+html:not([data-effective-color-scheme="dark"])[data-theme="material"] .button-primary,
+html:not([data-effective-color-scheme="dark"])[data-theme="material"] .play-button {
+  background: var(--accent);
+  color: #FFFFFF;
+  border-radius: var(--radius-full);
+  font-weight: 500;
+  letter-spacing: 0.025em;
+  box-shadow: var(--shadow-accent);
+  transition: all var(--transition-normal);
+}
+
+html:not([data-effective-color-scheme="dark"])[data-theme="material"] .button-primary:hover,
+html:not([data-effective-color-scheme="dark"])[data-theme="material"] .play-button:hover {
+  background: var(--accent-hover);
+  box-shadow: 0 12px 32px -8px rgba(201, 95, 67, 0.35);
+  transform: translateY(-1px);
+}
+
+html:not([data-effective-color-scheme="dark"])[data-theme="material"] .button-secondary {
+  background: transparent;
+  color: var(--primary);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-full);
+  font-weight: 500;
+}
+
+html:not([data-effective-color-scheme="dark"])[data-theme="material"] .button-secondary:hover {
+  background: var(--primary-container);
+  border-color: var(--primary);
+}
+
+/* Material 卡片 */
+html:not([data-effective-color-scheme="dark"])[data-theme="material"] .card,
+html:not([data-effective-color-scheme="dark"])[data-theme="material"] .settings-panel-card {
+  position: relative;
+  z-index: 0;
+  background: var(--surface-elevated);
+  box-shadow: var(--shadow-sm);
+  border-radius: var(--radius-md);
+  border: none;
+  transition: all var(--transition-normal);
+}
+
+html:not([data-effective-color-scheme="dark"])[data-theme="material"] .settings-panel-card {
+  border: 1px solid var(--material-settings-outline-soft);
+  box-shadow:
+    var(--shadow-sm),
+    inset 0 0 0 1px var(--material-settings-outline-inner);
+}
+
+html:not([data-effective-color-scheme="dark"])[data-theme="material"] .card:hover,
+html:not([data-effective-color-scheme="dark"])[data-theme="material"] .settings-panel-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+html:not([data-effective-color-scheme="dark"])[data-theme="material"] .settings-panel-card.has-open-menu {
+  z-index: 100;
+}
+
+/* Material 输入框 */
+html:not([data-effective-color-scheme="dark"])[data-theme="material"] input[type="text"],
+html:not([data-effective-color-scheme="dark"])[data-theme="material"] input[type="search"] {
+  background: var(--surface-sub);
+  border: 2px solid transparent;
+  border-radius: var(--radius-md);
+  color: var(--ink);
+  transition: all var(--transition-normal);
+}
+
+html:not([data-effective-color-scheme="dark"])[data-theme="material"] input[type="text"]:focus,
+html:not([data-effective-color-scheme="dark"])[data-theme="material"] input[type="search"]:focus {
+  background: var(--surface-elevated);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px rgba(103, 80, 164, 0.12);
+}
+
+/* Material 歌曲项 - 撞色激活 */
+html:not([data-effective-color-scheme="dark"])[data-theme="material"] .song-item {
+  border-radius: var(--radius-md);
+  transition: all var(--transition-fast);
+}
+
+html:not([data-effective-color-scheme="dark"])[data-theme="material"] .song-item:hover {
+  background: var(--state-layer-hover);
+}
+
+html:not([data-effective-color-scheme="dark"])[data-theme="material"] .song-item.is-active {
+  background: var(--accent-soft);
+  border-left: 4px solid var(--accent);
+}
+
+html:not([data-effective-color-scheme="dark"])[data-theme="material"] .song-item.is-playing {
+  background: var(--color-playing-bg);
+}
+
+/* Material 标签和徽章 - 珊瑚撞色 */
+html:not([data-effective-color-scheme="dark"])[data-theme="material"] .badge,
+html:not([data-effective-color-scheme="dark"])[data-theme="material"] .sidebar-status-pill {
+  background: var(--accent);
+  color: #FFFFFF;
+  border-radius: var(--radius-full);
+  font-weight: 600;
+  box-shadow: var(--shadow-accent);
+}
+
+/* 设置项激活状态 - 紫色系 */
+html:not([data-effective-color-scheme="dark"])[data-theme="material"] .settings-nav-item.is-active,
+html:not([data-effective-color-scheme="dark"])[data-theme="material"] .settings-choice.is-active {
+  background: var(--primary-container);
+  color: var(--primary-dark);
+  border-color: var(--primary);
+}
+
+html:not([data-effective-color-scheme="dark"])[data-theme="material"] .settings-nav-item.is-active span,
+html:not([data-effective-color-scheme="dark"])[data-theme="material"] .settings-choice.is-active strong {
+  color: var(--primary-dark);
+}
+
+html:not([data-effective-color-scheme="dark"])[data-theme="material"] .settings-toggle.is-active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #ffffff;
+}
+
+html:not([data-effective-color-scheme="dark"])[data-theme="material"] .settings-toggle.is-active .settings-toggle-thumb {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* 播放进度条 - 珊瑚撞色 */
+html:not([data-effective-color-scheme="dark"])[data-theme="material"] .progress-fill {
+  background: var(--accent);
+}
+
+html:not([data-effective-color-scheme="dark"])[data-theme="material"] .progress-thumb {
+  background: var(--accent);
+  box-shadow: var(--shadow-accent);
+}
+
+html:not([data-effective-color-scheme="dark"])[data-theme="material"] .control-button {
+  color: var(--ink-soft);
+}
+
+html:not([data-effective-color-scheme="dark"])[data-theme="material"] .control-button:hover {
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
+html:not([data-effective-color-scheme="dark"])[data-theme="material"] .control-button.is-active {
+  color: var(--accent);
+}
+
+/* 浮动面板 - 实色背景 */
+html:not([data-effective-color-scheme="dark"])[data-theme="material"] .track-inspector,
+html:not([data-effective-color-scheme="dark"])[data-theme="material"] .settings-modal,
+html:not([data-effective-color-scheme="dark"])[data-theme="material"] .library-search-popover,
+html:not([data-effective-color-scheme="dark"])[data-theme="material"] .library-toolbar-dropdown,
+html:not([data-effective-color-scheme="dark"])[data-theme="material"] .settings-select-dropdown {
+  background: var(--surface-elevated);
+  backdrop-filter: none;
+}
+
+html:not([data-effective-color-scheme="dark"])[data-theme="material"] .settings-modal {
+  border-color: var(--material-settings-outline);
+  box-shadow:
+    var(--shadow-lg),
+    inset 0 0 0 1px var(--material-settings-outline-inner);
+}
+
+html:not([data-effective-color-scheme="dark"])[data-theme="material"] .settings-modal-header,
+html:not([data-effective-color-scheme="dark"])[data-theme="material"] .settings-modal-nav {
+  border-color: var(--material-settings-outline-soft);
+}
+
+html:not([data-effective-color-scheme="dark"])[data-theme="material"] .settings-choice,
+html:not([data-effective-color-scheme="dark"])[data-theme="material"] .settings-select,
+html:not([data-effective-color-scheme="dark"])[data-theme="material"] .settings-storage-summary,
+html:not([data-effective-color-scheme="dark"])[data-theme="material"] .settings-scan-progress {
+  border-color: var(--material-settings-outline-soft);
+}
+
+html:not([data-effective-color-scheme="dark"])[data-theme="material"] .settings-choice:hover,
+html:not([data-effective-color-scheme="dark"])[data-theme="material"] .settings-select-trigger:hover,
+html:not([data-effective-color-scheme="dark"])[data-theme="material"] .settings-select-trigger.is-open {
+  border-color: var(--material-settings-outline);
+}
+
+html:not([data-effective-color-scheme="dark"])[data-theme="material"] .playback-dock {
+  background: var(--surface-elevated);
+  backdrop-filter: none;
+}
+
+/* 原生窗口模式 - 保持 Material 色调，但底层使用高透明玻璃 */
+html:not([data-effective-color-scheme="dark"])[data-theme="material"][data-window-surface="native-glass"] {
+  --surface-app: rgba(238, 231, 247, 0.08);
+  --surface-shell: rgba(230, 221, 243, 0.78);
+  --surface-main: rgba(252, 250, 255, 0.88);
+  --surface-sub: rgba(246, 241, 250, 0.74);
+  --surface-soft: rgba(241, 235, 246, 0.78);
+  --surface-base: rgba(252, 250, 255, 0.78);
+  --surface-elevated: rgba(255, 255, 255, 0.92);
+  --surface-overlay: rgba(246, 241, 250, 0.74);
+  --surface-solid: rgba(255, 255, 255, 0.96);
+  --line: rgba(107, 87, 168, 0.16);
+  --line-soft: rgba(107, 87, 168, 0.09);
+  --line-strong: rgba(107, 87, 168, 0.22);
+  --material-settings-outline: rgba(107, 87, 168, 0.18);
+  --material-settings-outline-soft: rgba(107, 87, 168, 0.12);
+  --material-settings-outline-inner: rgba(255, 255, 255, 0.28);
+  --border-inner: rgba(255, 255, 255, 0.12);
+  --shadow-lg: 0 24px 48px -12px rgba(107, 87, 168, 0.18);
+  --shadow-md: 0 8px 20px -8px rgba(107, 87, 168, 0.12);
+  --shadow-sm: 0 2px 8px -2px rgba(107, 87, 168, 0.08);
+  --shadow-accent: var(--of-glow-brand);
+  --color-playing: var(--of-playing);
+  --color-playing-bg: var(--of-playing-soft);
+  --color-playing-border: var(--of-playing-border);
+}
+
+/* 原生窗口下的背景 */
+html:not([data-effective-color-scheme="dark"])[data-theme="material"][data-window-surface="native-glass"] .app-window {
+  background: transparent;
+}
+
+html:not([data-effective-color-scheme="dark"])[data-theme="material"][data-window-surface="native-glass"] .app-window::before {
+  background: var(--surface-app);
+}
+
+html:not([data-effective-color-scheme="dark"])[data-theme="material"][data-window-surface="native-glass"] .player-shell {
+  background: var(--surface-shell);
+  backdrop-filter: blur(46px) saturate(1.18);
+}
+
+html:not([data-effective-color-scheme="dark"])[data-theme="material"][data-window-surface="native-glass"] .panel-sidebar {
+  background: var(--surface-sub);
+  backdrop-filter: blur(36px) saturate(1.14);
+}
+
+html:not([data-effective-color-scheme="dark"])[data-theme="material"][data-window-surface="native-glass"] .panel-player {
+  background: var(--surface-main);
+  backdrop-filter: blur(36px) saturate(1.14);
+}
+
+html:not([data-effective-color-scheme="dark"])[data-theme="material"][data-window-surface="native-glass"] .playback-dock {
+  background: var(--surface-elevated);
+  backdrop-filter: blur(36px) saturate(1.14);
+}
+
+html:not([data-effective-color-scheme="dark"])[data-theme="material"][data-window-surface="native-glass"] :is(
+  .library-toolbar-select,
+  .library-toolbar-dropdown,
+  .sidebar-action,
+  .sidebar-settings,
+  .track-inspector,
+  .settings-modal,
+  .settings-panel-card,
+  .settings-choice,
+  .settings-select,
+  .settings-select-dropdown
+) {
+  background: var(--surface-elevated);
+  backdrop-filter: blur(28px) saturate(1.12);
+}
+
+html[data-effective-color-scheme="dark"][data-theme="material"] {
+  --material-settings-outline: rgba(208, 188, 255, 0.16);
+  --material-settings-outline-soft: rgba(208, 188, 255, 0.1);
+  --material-settings-outline-inner: rgba(255, 255, 255, 0.035);
+}
+
+html[data-effective-color-scheme="dark"][data-theme="material"] .settings-modal {
+  border-color: var(--material-settings-outline);
+  box-shadow:
+    var(--shadow-lg),
+    inset 0 0 0 1px var(--material-settings-outline-inner);
+}
+
+html[data-effective-color-scheme="dark"][data-theme="material"] .settings-modal-header,
+html[data-effective-color-scheme="dark"][data-theme="material"] .settings-modal-nav {
+  border-color: var(--material-settings-outline-soft);
+}
+
+html[data-effective-color-scheme="dark"][data-theme="material"] .settings-panel-card,
+html[data-effective-color-scheme="dark"][data-theme="material"] .settings-choice,
+html[data-effective-color-scheme="dark"][data-theme="material"] .settings-select,
+html[data-effective-color-scheme="dark"][data-theme="material"] .settings-storage-summary,
+html[data-effective-color-scheme="dark"][data-theme="material"] .settings-scan-progress {
+  border-color: var(--material-settings-outline-soft);
+}
+
+html[data-effective-color-scheme="dark"][data-theme="material"] .settings-panel-card {
+  box-shadow: inset 0 0 0 1px var(--material-settings-outline-inner);
+}
+
+

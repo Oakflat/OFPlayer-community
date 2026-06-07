@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-playback-session-pause"
+description = "Enables the playback_session_pause command without any pre-configured scope."
+commands.allow = ["playback_session_pause"]
+
+[[permission]]
+identifier = "deny-playback-session-pause"
+description = "Denies the playback_session_pause command without any pre-configured scope."
+commands.deny = ["playback_session_pause"]

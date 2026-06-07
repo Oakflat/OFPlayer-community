@@ -1,0 +1,253 @@
+/**
+ * OFplayer 播放器颜色子系统
+ *
+ * 播放器特有的颜色变量，独立于主题系统
+ * 用户可以通过自定义这些变量来个性化播放器配色
+ *
+ * 使用方式：
+ * 1. 通过 CSS 变量覆盖：:root { --of-player-accent: #ff6b6b; }
+ * 2. 通过 JavaScript 动态设置：document.documentElement.style.setProperty('--of-player-accent', '#ff6b6b')
+ * 3. 通过 data-player-theme 属性切换预设主题
+ */
+
+/* ========================================
+   播放器颜色基础变量
+   ======================================== */
+:root {
+  /* 播放器主色调 - 默认跟随品牌色 */
+  --of-player-accent: var(--of-brand);
+  --of-player-accent-hover: var(--of-brand-hover);
+  --of-player-accent-active: var(--of-brand-active);
+  --of-player-accent-soft: var(--of-brand-soft);
+  --of-player-accent-border: var(--of-brand-border);
+
+  /* 播放器背景 */
+  --of-player-bg: var(--of-surface);
+  --of-player-bg-elevated: var(--of-surface-raised);
+  --of-player-bg-glass: rgba(255, 255, 255, 0.85);
+
+  /* 播放器文本 */
+  --of-player-text: var(--of-ink);
+  --of-player-text-secondary: var(--of-ink-soft);
+  --of-player-text-muted: var(--of-ink-muted);
+
+  /* 播放器边框 */
+  --of-player-border: var(--of-border);
+  --of-player-border-subtle: var(--of-divider);
+
+  /* 播放器阴影 */
+  --of-player-shadow: var(--of-shadow-md);
+  --of-player-shadow-elevated: var(--of-shadow-lg);
+
+  /* 播放器圆角 */
+  --of-player-radius: var(--of-radius-xl);
+  --of-player-radius-sm: var(--of-radius-md);
+
+  /* 播放进度 */
+  --of-player-progress: var(--of-player-accent);
+  --of-player-progress-bg: var(--of-border);
+  --of-player-progress-thumb: var(--of-player-accent);
+
+  /* 播放控制 */
+  --of-player-control: var(--of-ink-muted);
+  --of-player-control-hover: var(--of-player-accent);
+  --of-player-control-active: var(--of-player-accent);
+  --of-player-control-bg-hover: var(--of-player-accent-soft);
+
+  /* 播放按钮 */
+  --of-player-play-bg: var(--of-player-accent);
+  --of-player-play-bg-hover: var(--of-player-accent-hover);
+  --of-player-play-text: #FFFFFF;
+
+  /* 当前播放项 */
+  --of-player-current-text: var(--of-player-accent);
+  --of-player-current-bg: var(--of-player-accent-soft);
+  --of-player-current-border: var(--of-player-accent-border);
+
+  /* 收藏按钮 */
+  --of-player-like: var(--of-like);
+  --of-player-like-hover: var(--of-like-hover);
+  --of-player-like-active: var(--of-like-active);
+  --of-player-like-soft: var(--of-like-soft);
+
+  /* 音量控制 */
+  --of-player-volume: var(--of-player-accent);
+  --of-player-volume-bg: var(--of-border);
+  --of-player-volume-muted: var(--of-ink-disabled);
+
+  /* 歌词 */
+  --of-player-lyrics-text: var(--of-ink);
+  --of-player-lyrics-current: var(--of-player-accent);
+  --of-player-lyrics-muted: var(--of-ink-subtle);
+
+  /* 封面 */
+  --of-player-cover-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  --of-player-cover-radius: var(--of-radius-lg);
+}
+
+/* ========================================
+   播放器预设主题
+   ======================================== */
+
+/* 清透蓝（默认） */
+[data-player-theme="blue"] {
+  --of-player-accent: #0EA5E9;
+  --of-player-accent-hover: #0284C7;
+  --of-player-accent-active: #0369A1;
+  --of-player-accent-soft: rgba(14, 165, 233, 0.12);
+  --of-player-accent-border: rgba(14, 165, 233, 0.28);
+}
+
+/* 活力橙 */
+[data-player-theme="orange"] {
+  --of-player-accent: #F97316;
+  --of-player-accent-hover: #EA580C;
+  --of-player-accent-active: #C2410C;
+  --of-player-accent-soft: rgba(249, 115, 22, 0.12);
+  --of-player-accent-border: rgba(249, 115, 22, 0.28);
+}
+
+/* 翡翠绿 */
+[data-player-theme="green"] {
+  --of-player-accent: #10B981;
+  --of-player-accent-hover: #059669;
+  --of-player-accent-active: #047857;
+  --of-player-accent-soft: rgba(16, 185, 129, 0.12);
+  --of-player-accent-border: rgba(16, 185, 129, 0.28);
+}
+
+/* 玫瑰红 */
+[data-player-theme="rose"] {
+  --of-player-accent: #F43F5E;
+  --of-player-accent-hover: #E11D48;
+  --of-player-accent-active: #BE123C;
+  --of-player-accent-soft: rgba(244, 63, 94, 0.12);
+  --of-player-accent-border: rgba(244, 63, 94, 0.28);
+}
+
+/* 紫罗兰 */
+[data-player-theme="violet"] {
+  --of-player-accent: #8B5CF6;
+  --of-player-accent-hover: #7C3AED;
+  --of-player-accent-active: #6D28D9;
+  --of-player-accent-soft: rgba(139, 92, 246, 0.12);
+  --of-player-accent-border: rgba(139, 92, 246, 0.28);
+}
+
+/* 琥珀金 */
+[data-player-theme="amber"] {
+  --of-player-accent: #F59E0B;
+  --of-player-accent-hover: #D97706;
+  --of-player-accent-active: #B45309;
+  --of-player-accent-soft: rgba(245, 158, 11, 0.12);
+  --of-player-accent-border: rgba(245, 158, 11, 0.28);
+}
+
+/* 青瓷 */
+[data-player-theme="teal"] {
+  --of-player-accent: #14B8A6;
+  --of-player-accent-hover: #0D9488;
+  --of-player-accent-active: #0F766E;
+  --of-player-accent-soft: rgba(20, 184, 166, 0.12);
+  --of-player-accent-border: rgba(20, 184, 166, 0.28);
+}
+
+/* 石墨灰 */
+[data-player-theme="slate"] {
+  --of-player-accent: #475569;
+  --of-player-accent-hover: #334155;
+  --of-player-accent-active: #1E293B;
+  --of-player-accent-soft: rgba(71, 85, 105, 0.12);
+  --of-player-accent-border: rgba(71, 85, 105, 0.28);
+}
+
+/* ========================================
+   深色模式播放器颜色
+   ======================================== */
+html[data-effective-color-scheme="dark"] {
+  --of-player-bg: var(--of-surface);
+  --of-player-bg-elevated: var(--of-surface-raised);
+  --of-player-bg-glass: rgba(17, 24, 39, 0.85);
+
+  --of-player-text: var(--of-ink);
+  --of-player-text-secondary: var(--of-ink-soft);
+  --of-player-text-muted: var(--of-ink-muted);
+
+  --of-player-border: var(--of-border);
+  --of-player-border-subtle: var(--of-divider);
+
+  --of-player-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  --of-player-shadow-elevated: 0 16px 48px rgba(0, 0, 0, 0.4);
+
+  --of-player-cover-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+/* 深色模式预设主题调整 */
+html[data-effective-color-scheme="dark"][data-player-theme="blue"] {
+  --of-player-accent: #38BDF8;
+  --of-player-accent-hover: #7DD3FC;
+  --of-player-accent-soft: rgba(56, 189, 248, 0.16);
+  --of-player-accent-border: rgba(56, 189, 248, 0.34);
+}
+
+html[data-effective-color-scheme="dark"][data-player-theme="orange"] {
+  --of-player-accent: #FB923C;
+  --of-player-accent-hover: #FDBA74;
+  --of-player-accent-soft: rgba(251, 146, 60, 0.16);
+  --of-player-accent-border: rgba(251, 146, 60, 0.34);
+}
+
+html[data-effective-color-scheme="dark"][data-player-theme="green"] {
+  --of-player-accent: #34D399;
+  --of-player-accent-hover: #6EE7B7;
+  --of-player-accent-soft: rgba(52, 211, 153, 0.16);
+  --of-player-accent-border: rgba(52, 211, 153, 0.34);
+}
+
+html[data-effective-color-scheme="dark"][data-player-theme="rose"] {
+  --of-player-accent: #FB7185;
+  --of-player-accent-hover: #FDA4AF;
+  --of-player-accent-soft: rgba(251, 113, 133, 0.16);
+  --of-player-accent-border: rgba(251, 113, 133, 0.34);
+}
+
+html[data-effective-color-scheme="dark"][data-player-theme="violet"] {
+  --of-player-accent: #A78BFA;
+  --of-player-accent-hover: #C4B5FD;
+  --of-player-accent-soft: rgba(167, 139, 250, 0.16);
+  --of-player-accent-border: rgba(167, 139, 250, 0.34);
+}
+
+html[data-effective-color-scheme="dark"][data-player-theme="amber"] {
+  --of-player-accent: #FBBF24;
+  --of-player-accent-hover: #FCD34D;
+  --of-player-accent-soft: rgba(251, 191, 36, 0.16);
+  --of-player-accent-border: rgba(251, 191, 36, 0.34);
+}
+
+html[data-effective-color-scheme="dark"][data-player-theme="teal"] {
+  --of-player-accent: #2DD4BF;
+  --of-player-accent-hover: #5EEAD4;
+  --of-player-accent-soft: rgba(45, 212, 191, 0.16);
+  --of-player-accent-border: rgba(45, 212, 191, 0.34);
+}
+
+html[data-effective-color-scheme="dark"][data-player-theme="slate"] {
+  --of-player-accent: #94A3B8;
+  --of-player-accent-hover: #CBD5E1;
+  --of-player-accent-soft: rgba(148, 163, 184, 0.16);
+  --of-player-accent-border: rgba(148, 163, 184, 0.34);
+}
+
+/* ========================================
+   播放器自定义颜色支持
+   ======================================== */
+
+/* 当用户设置自定义颜色时，覆盖预设主题 */
+[data-player-custom="true"] {
+  --of-player-accent: var(--of-player-custom-accent, var(--of-brand));
+  --of-player-accent-hover: var(--of-player-custom-accent-hover, var(--of-brand-hover));
+  --of-player-accent-active: var(--of-player-custom-accent-active, var(--of-brand-active));
+  --of-player-accent-soft: var(--of-player-custom-accent-soft, var(--of-brand-soft));
+  --of-player-accent-border: var(--of-player-custom-accent-border, var(--of-brand-border));
+}

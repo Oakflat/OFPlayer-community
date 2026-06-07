@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-desktop-catalog-put-libraries"
+description = "Enables the desktop_catalog_put_libraries command without any pre-configured scope."
+commands.allow = ["desktop_catalog_put_libraries"]
+
+[[permission]]
+identifier = "deny-desktop-catalog-put-libraries"
+description = "Denies the desktop_catalog_put_libraries command without any pre-configured scope."
+commands.deny = ["desktop_catalog_put_libraries"]

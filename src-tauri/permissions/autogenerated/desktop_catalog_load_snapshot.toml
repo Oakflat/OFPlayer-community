@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-desktop-catalog-load-snapshot"
+description = "Enables the desktop_catalog_load_snapshot command without any pre-configured scope."
+commands.allow = ["desktop_catalog_load_snapshot"]
+
+[[permission]]
+identifier = "deny-desktop-catalog-load-snapshot"
+description = "Denies the desktop_catalog_load_snapshot command without any pre-configured scope."
+commands.deny = ["desktop_catalog_load_snapshot"]
