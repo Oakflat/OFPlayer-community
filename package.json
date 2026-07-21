@@ -1,7 +1,7 @@
 {
   "name": "ofplayer-community-tauri",
   "private": true,
-  "version": "26.0.3",
+  "version": "26.0.4",
   "license": "SEE LICENSE IN LICENSE",
   "type": "module",
   "scripts": {
@@ -19,13 +19,13 @@
     "tauri:build:msi": "node --experimental-strip-types ./scripts/run-tauri.ts build --bundles msi"
   },
   "dependencies": {
-    "@tauri-apps/api": "^2.10.1",
+    "@tauri-apps/api": "^2.11.1",
     "@tauri-apps/plugin-dialog": "^2.7.0",
     "lucide-vue-next": "^1.0.0",
     "vue": "^3.5.32"
   },
   "devDependencies": {
-    "@tauri-apps/cli": "^2.10.1",
+    "@tauri-apps/cli": "^2.11.4",
     "@types/node": "^25.9.1",
     "@vitejs/plugin-vue": "^6.0.6",
     "esbuild": "^0.28.0",

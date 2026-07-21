@@ -1,6 +1,6 @@
 [package]
 name = "ofplayer-tauri"
-version = "26.0.3"
+version = "26.0.4"
 description = "Local-first desktop branch for OFPlayer"
 authors = ["OFPlayer contributors"]
 edition = "2021"
