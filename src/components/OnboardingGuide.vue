@@ -523,7 +523,7 @@ onBeforeUnmount(() => {
   border-radius: 8px;
   background: var(--surface-soft);
   color: var(--ink-muted);
-  transition: transform var(--transition-bounce), background var(--transition-fast), color var(--transition-fast);
+  transition: transform var(--transition-normal), background var(--transition-fast), color var(--transition-fast);
 }
 
 .og-mini-add.is-pulsing {
@@ -667,7 +667,7 @@ onBeforeUnmount(() => {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-family: var(--font-mono, 'Consolas', monospace);
+  font-family: var(--font-family);
   font-size: 0.68rem;
   color: var(--ink-muted);
 }

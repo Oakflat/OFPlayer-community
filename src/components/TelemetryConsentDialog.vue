@@ -159,7 +159,7 @@ onBeforeUnmount(() => {
     border-color var(--transition-fast),
     background var(--transition-fast),
     color var(--transition-fast),
-    transform var(--transition-bounce),
+    transform var(--transition-normal),
     box-shadow var(--transition-fast);
 }
 

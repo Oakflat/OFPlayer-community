@@ -78,7 +78,7 @@ html:not([data-effective-color-scheme="dark"])[data-theme="material"] {
   --shadow-lg: var(--of-shadow-lg);
   --shadow-md: var(--of-shadow-md);
   --shadow-sm: var(--of-shadow-sm);
-  --shadow-accent: var(--of-glow-brand);
+  --shadow-accent: var(--shadow-md);
 
   /* ===== 圆角 ===== */
   --radius-sm: 0.25rem;
@@ -125,13 +125,17 @@ html:not([data-effective-color-scheme="dark"])[data-theme="material"] .play-butt
   font-weight: 500;
   letter-spacing: 0.025em;
   box-shadow: var(--shadow-accent);
-  transition: all var(--transition-normal);
+  transition:
+    background-color var(--transition-normal),
+    color var(--transition-normal),
+    box-shadow var(--transition-normal),
+    transform var(--transition-normal);
 }
 
 html:not([data-effective-color-scheme="dark"])[data-theme="material"] .button-primary:hover,
 html:not([data-effective-color-scheme="dark"])[data-theme="material"] .play-button:hover {
   background: var(--accent-hover);
-  box-shadow: 0 12px 32px -8px rgba(201, 95, 67, 0.35);
+  box-shadow: 0 6px 16px -6px rgba(201, 95, 67, 0.22);
   transform: translateY(-1px);
 }
 
@@ -157,7 +161,9 @@ html:not([data-effective-color-scheme="dark"])[data-theme="material"] .settings-
   box-shadow: var(--shadow-sm);
   border-radius: var(--radius-md);
   border: none;
-  transition: all var(--transition-normal);
+  transition:
+    box-shadow var(--transition-normal),
+    transform var(--transition-normal);
 }
 
 html:not([data-effective-color-scheme="dark"])[data-theme="material"] .settings-panel-card {
@@ -184,7 +190,10 @@ html:not([data-effective-color-scheme="dark"])[data-theme="material"] input[type
   border: 2px solid transparent;
   border-radius: var(--radius-md);
   color: var(--ink);
-  transition: all var(--transition-normal);
+  transition:
+    background-color var(--transition-normal),
+    border-color var(--transition-normal),
+    box-shadow var(--transition-normal);
 }
 
 html:not([data-effective-color-scheme="dark"])[data-theme="material"] input[type="text"]:focus,
@@ -197,7 +206,9 @@ html:not([data-effective-color-scheme="dark"])[data-theme="material"] input[type
 /* Material 歌曲项 - 撞色激活 */
 html:not([data-effective-color-scheme="dark"])[data-theme="material"] .song-item {
   border-radius: var(--radius-md);
-  transition: all var(--transition-fast);
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast);
 }
 
 html:not([data-effective-color-scheme="dark"])[data-theme="material"] .song-item:hover {
@@ -330,7 +341,7 @@ html:not([data-effective-color-scheme="dark"])[data-theme="material"][data-windo
   --shadow-lg: 0 24px 48px -12px rgba(107, 87, 168, 0.18);
   --shadow-md: 0 8px 20px -8px rgba(107, 87, 168, 0.12);
   --shadow-sm: 0 2px 8px -2px rgba(107, 87, 168, 0.08);
-  --shadow-accent: var(--of-glow-brand);
+  --shadow-accent: var(--shadow-md);
   --color-playing: var(--of-playing);
   --color-playing-bg: var(--of-playing-soft);
   --color-playing-border: var(--of-playing-border);

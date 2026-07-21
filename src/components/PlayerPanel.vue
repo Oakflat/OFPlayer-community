@@ -795,7 +795,7 @@ const progressPercent = computed(() => {
 })
 
 const progressSliderStyle = computed(() => ({
-  '--progress-percent': `${progressPercent.value}%`,
+  '--progress': `${progressPercent.value / 100}`,
 }))
 
 const durationValue = computed(() => {
@@ -4122,7 +4122,7 @@ onBeforeUnmount(() => {
   background: transparent;
   color: var(--ink-muted);
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: opacity var(--transition-fast), background-color var(--transition-fast), color var(--transition-fast);
 }
 
 .song-row-favorite {
@@ -4301,7 +4301,7 @@ onBeforeUnmount(() => {
   text-align: left;
   cursor: pointer;
   transition:
-    transform var(--transition-bounce),
+    transform var(--transition-normal),
     background-color var(--transition-fast),
     border-color var(--transition-fast),
     color var(--transition-fast),

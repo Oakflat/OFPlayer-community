@@ -563,7 +563,7 @@ watch(
   cursor: pointer;
   outline: none;
   border-radius: 10px;
-  transition: transform var(--transition-bounce);
+  transition: transform var(--duration-xl) var(--ease-emphasized-decelerate);
 }
 .album-card:hover { transform: translateY(-3px); }
 .album-card:active { transform: translateY(-1px) scale(0.99); }
@@ -584,7 +584,7 @@ watch(
   overflow: hidden;
   background: var(--surface-variant, #f2f2f5);
   box-shadow: var(--shadow-sm);
-  transition: box-shadow var(--transition-normal), transform var(--transition-bounce);
+  transition: box-shadow var(--transition-normal), transform var(--duration-xl) var(--ease-emphasized-decelerate);
 }
 .album-card:hover .card-cover-wrap {
   box-shadow: var(--shadow-soft);
@@ -642,7 +642,7 @@ watch(
   cursor: pointer;
   color: #111;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  transition: transform var(--transition-bounce), background var(--transition-fast);
+  transition: transform var(--duration-xl) var(--ease-emphasized-decelerate), background var(--transition-fast);
   /* 从 overlay 中心缩放进入 */
   transform: scale(0.82);
 }
@@ -663,7 +663,7 @@ watch(
   border: none;
   cursor: pointer;
   color: #111;
-  transition: transform var(--transition-bounce), background var(--transition-fast);
+  transition: transform var(--duration-xl) var(--ease-emphasized-decelerate), background var(--transition-fast);
   transform: scale(0.82);
 }
 .card-cover-wrap:hover .card-cover-btn {
@@ -784,7 +784,7 @@ watch(
   background: var(--surface-variant, #f2f2f5);
   cursor: pointer;
   box-shadow: var(--shadow-soft);
-  transition: box-shadow var(--transition-normal), transform var(--transition-bounce);
+  transition: box-shadow var(--transition-normal), transform var(--duration-xl) var(--ease-emphasized-decelerate);
 }
 .detail-cover-wrap:hover { transform: scale(1.02); box-shadow: 0 12px 32px -8px rgba(0,0,0,0.18); }
 
@@ -875,8 +875,8 @@ watch(
   cursor: pointer;
   font-size: var(--font-size-sm, 0.82rem);
   font-weight: var(--font-weight-semibold, 600);
-  transition: opacity var(--transition-fast), transform var(--transition-bounce);
-  animation: scale-in-soft var(--duration-xl) var(--ease-spring) both;
+  transition: opacity var(--transition-fast), transform var(--duration-xl) var(--ease-emphasized-decelerate);
+  animation: scale-in-soft var(--duration-xl) var(--ease-emphasized-decelerate) both;
   animation-delay: 180ms;
 }
 .detail-play-all-btn:hover { opacity: 0.88; transform: scale(1.04); }
@@ -978,7 +978,7 @@ watch(
   border-radius: 5px;
   object-fit: cover;
   flex-shrink: 0;
-  transition: transform var(--transition-bounce);
+  transition: transform var(--duration-xl) var(--ease-emphasized-decelerate);
   box-shadow: var(--shadow-sm);
 }
 .artist-album-section-header:hover .artist-album-thumb { transform: scale(1.06); }

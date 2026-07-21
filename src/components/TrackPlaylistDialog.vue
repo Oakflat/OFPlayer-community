@@ -339,7 +339,7 @@ watch(selectedLibraryId, (libraryId) => {
   background: var(--control-soft);
   color: var(--ink-soft);
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: border-color var(--transition-fast), background-color var(--transition-fast), color var(--transition-fast);
 }
 
 .dialog-close:hover {
@@ -384,7 +384,7 @@ watch(selectedLibraryId, (libraryId) => {
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-semibold);
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: border-color var(--transition-fast), background-color var(--transition-fast), box-shadow var(--transition-fast), opacity var(--transition-fast);
 }
 
 .dialog-button:disabled {
@@ -481,7 +481,7 @@ watch(selectedLibraryId, (libraryId) => {
   border-radius: var(--radius-lg);
   background: var(--surface-soft);
   text-align: left;
-  transition: all var(--transition-normal);
+  transition: border-color var(--transition-normal), background-color var(--transition-normal), box-shadow var(--transition-normal), opacity var(--transition-normal);
 }
 
 .playlist-dialog-option:hover:not(:disabled) {
@@ -524,12 +524,12 @@ watch(selectedLibraryId, (libraryId) => {
 
 .dialog-enter-active,
 .dialog-leave-active {
-  transition: all var(--transition-normal);
+  transition: opacity var(--transition-normal);
 }
 
 .dialog-enter-active .dialog-modal,
 .dialog-leave-active .dialog-modal {
-  transition: all var(--transition-normal);
+  transition: opacity var(--transition-normal), transform var(--transition-normal);
 }
 
 .dialog-enter-from,

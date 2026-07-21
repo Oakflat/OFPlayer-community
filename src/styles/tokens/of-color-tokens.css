@@ -140,9 +140,9 @@
   --of-shadow-md: 0 8px 24px rgba(15, 23, 42, 0.08);
   --of-shadow-lg: 0 18px 48px rgba(15, 23, 42, 0.12);
 
-  --of-glow-brand: 0 0 24px rgba(14, 165, 233, 0.24);
-  --of-glow-like: 0 0 24px rgba(255, 77, 141, 0.22);
-  --of-glow-danger: 0 0 24px rgba(255, 59, 48, 0.22);
+  --of-glow-brand: 0 4px 16px -4px rgba(14, 165, 233, 0.14);
+  --of-glow-like: 0 4px 16px -4px rgba(255, 77, 141, 0.14);
+  --of-glow-danger: 0 4px 16px -4px rgba(255, 59, 48, 0.14);
 
   /* ========================================
      渐变

@@ -155,7 +155,10 @@ function handleCancel() {
   background: var(--control-soft);
   color: var(--ink-soft);
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition:
+    border-color var(--transition-fast),
+    background-color var(--transition-fast),
+    color var(--transition-fast);
 }
 
 .dialog-close:hover {
@@ -204,7 +207,9 @@ function handleCancel() {
   background: var(--surface-soft);
   font-size: var(--font-size-base);
   color: var(--ink);
-  transition: all var(--transition-fast);
+  transition:
+    border-color var(--transition-fast),
+    background-color var(--transition-fast);
 }
 
 .dialog-input:focus {
@@ -227,7 +232,10 @@ function handleCancel() {
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-semibold);
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition:
+    border-color var(--transition-fast),
+    background-color var(--transition-fast),
+    box-shadow var(--transition-fast);
 }
 
 .dialog-button-cancel {
@@ -263,12 +271,14 @@ function handleCancel() {
 
 .dialog-enter-active,
 .dialog-leave-active {
-  transition: all var(--transition-normal);
+  transition: opacity var(--transition-normal);
 }
 
 .dialog-enter-active .dialog-modal,
 .dialog-leave-active .dialog-modal {
-  transition: all var(--transition-normal);
+  transition:
+    opacity var(--transition-normal),
+    transform var(--transition-normal);
 }
 
 .dialog-enter-from,

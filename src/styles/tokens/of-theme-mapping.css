@@ -269,9 +269,9 @@ html[data-effective-color-scheme="dark"] {
   --of-shadow-md: 0 8px 24px rgba(0, 0, 0, 0.4);
   --of-shadow-lg: 0 18px 48px rgba(0, 0, 0, 0.5);
 
-  --of-glow-brand: 0 0 24px rgba(56, 189, 248, 0.3);
-  --of-glow-like: 0 0 24px rgba(255, 111, 163, 0.3);
-  --of-glow-danger: 0 0 24px rgba(255, 107, 94, 0.3);
+  --of-glow-brand: 0 4px 16px -4px rgba(56, 189, 248, 0.18);
+  --of-glow-like: 0 4px 16px -4px rgba(255, 111, 163, 0.18);
+  --of-glow-danger: 0 4px 16px -4px rgba(255, 107, 94, 0.18);
 
   --of-page-gradient:
     radial-gradient(circle at 18% 12%, rgba(56, 189, 248, 0.14), transparent 34%),

@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { nextTick, onBeforeUnmount, onMounted, ref, watch, type CSSProperties } from 'vue'
+import { nextTick, onBeforeUnmount, onMounted, ref, watch, type CSSProperties, type Component } from 'vue'
 
 export interface MenuDropdownItem {
   key: string | number
   label: string
+  icon?: Component
   disabled?: boolean
   [key: string]: unknown
 }
@@ -146,7 +147,8 @@ watch(
           role="menuitem"
           @click="handleItemClick(item)"
         >
-          {{ item.label }}
+          <component v-if="item.icon" :is="item.icon" class="menu-dropdown-item-icon" aria-hidden="true" />
+          <span class="menu-dropdown-item-label" :class="{ 'is-plain': !item.icon }">{{ item.label }}</span>
         </button>
       </div>
     </Transition>
@@ -173,7 +175,10 @@ watch(
 }
 
 .menu-dropdown-item {
-  display: block;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 0.5rem;
   width: 100%;
   min-width: 0;
   padding: 0.5rem 0.7rem;
@@ -193,6 +198,23 @@ watch(
     color var(--transition-fast);
 }
 
+.menu-dropdown-item-icon {
+  width: 15px;
+  height: 15px;
+  color: var(--ink-muted);
+}
+
+.menu-dropdown-item-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.menu-dropdown-item-label.is-plain {
+  grid-column: 1 / -1;
+}
+
 .menu-dropdown-item:hover:not(:disabled) {
   background: var(--surface-soft-hover);
 }
@@ -204,7 +226,7 @@ watch(
 
 .menu-dropdown-enter-active,
 .menu-dropdown-leave-active {
-  transition: all var(--transition-fast);
+  transition: opacity var(--transition-fast), transform var(--transition-fast);
 }
 
 .menu-dropdown-enter-from,
