@@ -73,6 +73,7 @@
     "allow-desktop-catalog-update-track",
     "allow-desktop-catalog-delete-tracks",
     "allow-desktop-history-load-recent",
+    "allow-desktop-history-load-stats",
     "allow-desktop-history-append",
     "allow-desktop-catalog-resolve-navigation",
     "allow-desktop-catalog-query-collection-tracks",

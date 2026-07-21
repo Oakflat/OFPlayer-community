@@ -41,15 +41,16 @@ use desktop_types::{
     DesktopBootstrapRequest, DesktopBootstrapSnapshot, DesktopStateResetResult, HistoryLoadRequest,
     LibraryCreateRequest, LibraryCreateResult, LibraryDeleteRequest, LibraryDeleteResult,
     LibraryImportCandidatesRequest, LibraryImportFileInput, LibraryPreparedTrackImportRequest,
-    LibraryRenameRequest, LibraryReorderRequest, LocalIndexInvalidationRequest,
-    LocalIndexInvalidationResult, NavigationQueryRequest, NavigationQueryResult,
-    PlaylistCreateRequest, PlaylistDeleteRequest, PlaylistDeleteResult, PlaylistRenameRequest,
-    PlaylistReorderRequest, PlaylistTrackMutationRequest, PlaylistTrackMutationResult,
-    PlaylistTrackRemoveRequest, PlaylistTrackRemoveResult, PlaylistTrackReorderRequest,
-    SessionPreviousRequest, SessionQueueRequest, SessionSelectTrackRequest, SessionStateSnapshot,
-    StorageGarbageCollectionResult, StorageUsageSnapshot, TrackBatchDeleteRequest,
-    TrackBatchDeleteResult, TrackDeleteRequest, TrackDeleteResult, TrackFavoriteRequest,
-    TrackLookupRequest, TrackUpdateRequest, UpsertRecordsRequest,
+    LibraryRenameRequest, LibraryReorderRequest, ListeningStatsRequest, ListeningStatsSnapshot,
+    LocalIndexInvalidationRequest, LocalIndexInvalidationResult, NavigationQueryRequest,
+    NavigationQueryResult, PlaylistCreateRequest, PlaylistDeleteRequest, PlaylistDeleteResult,
+    PlaylistRenameRequest, PlaylistReorderRequest, PlaylistTrackMutationRequest,
+    PlaylistTrackMutationResult, PlaylistTrackRemoveRequest, PlaylistTrackRemoveResult,
+    PlaylistTrackReorderRequest, SessionPreviousRequest, SessionQueueRequest,
+    SessionSelectTrackRequest, SessionStateSnapshot, StorageGarbageCollectionResult,
+    StorageUsageSnapshot, TrackBatchDeleteRequest, TrackBatchDeleteResult, TrackDeleteRequest,
+    TrackDeleteResult, TrackFavoriteRequest, TrackLookupRequest, TrackUpdateRequest,
+    UpsertRecordsRequest,
 };
 use diagnostics::{
     build_diagnostic_step_profile, build_process_resource_diagnostics,
@@ -2139,6 +2140,18 @@ fn desktop_history_load_recent(
 }
 
 #[tauri::command]
+fn desktop_history_load_stats(
+    desktop_state: State<'_, Mutex<DesktopStateStore>>,
+    request: ListeningStatsRequest,
+) -> Result<ListeningStatsSnapshot, String> {
+    let desktop_state = desktop_state
+        .lock()
+        .map_err(|_| String::from("Desktop state lock was poisoned."))?;
+
+    desktop_state.load_listening_stats(&request)
+}
+
+#[tauri::command]
 fn desktop_history_append(
     desktop_state: State<'_, Mutex<DesktopStateStore>>,
     value: serde_json::Value,
@@ -3661,6 +3674,7 @@ pub fn run() {
             desktop_catalog_update_track,
             desktop_catalog_delete_tracks,
             desktop_history_load_recent,
+            desktop_history_load_stats,
             desktop_history_append,
             desktop_catalog_resolve_navigation,
             desktop_catalog_query_collection_tracks,

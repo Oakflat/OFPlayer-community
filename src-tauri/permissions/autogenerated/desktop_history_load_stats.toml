@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-desktop-history-load-stats"
+description = "Enables the desktop_history_load_stats command without any pre-configured scope."
+commands.allow = ["desktop_history_load_stats"]
+
+[[permission]]
+identifier = "deny-desktop-history-load-stats"
+description = "Denies the desktop_history_load_stats command without any pre-configured scope."
+commands.deny = ["desktop_history_load_stats"]

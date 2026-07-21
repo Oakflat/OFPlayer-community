@@ -47,6 +47,77 @@ pub struct HistoryLoadRequest {
     pub limit: usize,
 }
 
+#[derive(Debug, Clone, Deserialize, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct ListeningStatsRequest {
+    pub library_id: Option<String>,
+    pub days: Option<usize>,
+    pub track_limit: Option<usize>,
+    pub album_limit: Option<usize>,
+    pub album_track_limit: Option<usize>,
+    pub timezone_offset_minutes: Option<i32>,
+}
+
+#[derive(Debug, Clone, Default, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ListeningStatsSummary {
+    pub total_seconds: f64,
+    pub play_count: usize,
+    pub track_count: usize,
+    pub album_count: usize,
+    pub active_days: usize,
+    pub peak_day: Option<String>,
+    pub peak_day_seconds: f64,
+    pub longest_streak_days: usize,
+}
+
+#[derive(Debug, Clone, Default, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ListeningStatsDailyBucket {
+    pub date: String,
+    pub seconds: f64,
+    pub play_count: usize,
+}
+
+#[derive(Debug, Clone, Default, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ListeningStatsTrackRank {
+    pub track_id: String,
+    pub title: String,
+    pub artist: String,
+    pub album: String,
+    pub album_artist: String,
+    pub artwork: String,
+    pub duration: f64,
+    pub listen_seconds: f64,
+    pub play_count: usize,
+}
+
+#[derive(Debug, Clone, Default, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ListeningStatsAlbumGroup {
+    pub key: String,
+    pub album: String,
+    pub album_artist: String,
+    pub artwork: String,
+    pub listen_seconds: f64,
+    pub play_count: usize,
+    pub track_count: usize,
+    pub tracks: Vec<ListeningStatsTrackRank>,
+}
+
+#[derive(Debug, Clone, Default, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ListeningStatsSnapshot {
+    pub generated_at: String,
+    pub library_id: Option<String>,
+    pub days: usize,
+    pub summary: ListeningStatsSummary,
+    pub daily: Vec<ListeningStatsDailyBucket>,
+    pub top_tracks: Vec<ListeningStatsTrackRank>,
+    pub album_groups: Vec<ListeningStatsAlbumGroup>,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SessionStateSnapshot {

@@ -47,6 +47,7 @@ const APP_COMMANDS: &[&str] = &[
     "desktop_catalog_update_track",
     "desktop_catalog_delete_tracks",
     "desktop_history_load_recent",
+    "desktop_history_load_stats",
     "desktop_history_append",
     "desktop_catalog_resolve_navigation",
     "desktop_catalog_query_collection_tracks",

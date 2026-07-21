@@ -1,5 +1,6 @@
 use crate::{
     app_paths,
+    artwork_store::resolve_stored_track_artwork,
     catalog_db::*,
     db_helpers::*,
     diagnostics::{
@@ -23,11 +24,12 @@ use crate::{
     sorting::{QueryTracksResult, SortableTrack},
     storage, storage_maintenance,
 };
+use chrono::{DateTime, Duration, NaiveDate, Utc};
 use rusqlite::{params, Connection, OptionalExtension, Transaction};
 use serde_json::{json, Value};
 use std::{
     cell::{Cell, RefCell},
-    collections::{HashMap, HashSet},
+    collections::{BTreeMap, HashMap, HashSet},
     path::{Path, PathBuf},
     time::Instant,
 };
@@ -514,8 +516,20 @@ impl DesktopStateStore {
     }
 
     pub fn delete_playlists(&self, ids: &[String]) -> Result<(), String> {
-        let connection = self.connection()?;
-        delete_records(&connection, "playlists", ids, "desktop playlists")?;
+        let mut connection = self.connection()?;
+        let transaction = connection.transaction().map_err(|error| {
+            format!("Failed to open the desktop playlist deletion transaction: {error}")
+        })?;
+
+        for playlist_id in ids {
+            let playlist = load_required_playlist_value(&transaction, playlist_id)?;
+            assert_user_playlist(&playlist)?;
+        }
+
+        delete_records_in_transaction(&transaction, "playlists", ids, "desktop playlists")?;
+        transaction
+            .commit()
+            .map_err(|error| format!("Failed to commit desktop playlists deletion: {error}"))?;
         self.mark_catalog_structure_changed()?;
         Ok(())
     }
@@ -572,6 +586,30 @@ impl DesktopStateStore {
         } else {
             Ok(track)
         }
+    }
+
+    pub fn track_ids_with_artwork(&self) -> Result<HashSet<String>, String> {
+        let connection = self.connection()?;
+        let mut statement = connection
+            .prepare(
+                "SELECT track_id
+                   FROM track_artwork
+                  WHERE COALESCE(artwork_text, '') <> ''
+                     OR COALESCE(artwork_path, '') <> ''",
+            )
+            .map_err(|error| format!("Failed to prepare desktop artwork lookup: {error}"))?;
+        let rows = statement
+            .query_map([], |row| row.get::<_, String>(0))
+            .map_err(|error| format!("Failed to read desktop artwork lookup: {error}"))?;
+        let mut track_ids = HashSet::new();
+        for row in rows {
+            let track_id =
+                row.map_err(|error| format!("Failed to read desktop artwork track id: {error}"))?;
+            if !track_id.trim().is_empty() {
+                track_ids.insert(track_id);
+            }
+        }
+        Ok(track_ids)
     }
 
     pub fn put_tracks(&self, records: &[Value]) -> Result<(), String> {
@@ -891,6 +929,14 @@ impl DesktopStateStore {
     pub fn load_recent_history(&self, limit: usize) -> Result<Vec<Value>, String> {
         let connection = self.connection()?;
         load_recent_history_from_connection(&connection, limit)
+    }
+
+    pub fn load_listening_stats(
+        &self,
+        request: &ListeningStatsRequest,
+    ) -> Result<ListeningStatsSnapshot, String> {
+        let connection = self.connection()?;
+        load_listening_stats_from_connection(&connection, request)
     }
 
     pub fn append_history_entry(&self, entry: &Value) -> Result<(), String> {
@@ -1958,6 +2004,691 @@ fn load_recent_history_from_connection(
         [query_limit],
         "desktop playback history",
     )
+}
+
+const DEFAULT_LISTENING_STATS_DAYS: usize = 365;
+const MAX_LISTENING_STATS_DAYS: usize = 3660;
+const DEFAULT_LISTENING_STATS_TRACK_LIMIT: usize = 24;
+const MAX_LISTENING_STATS_TRACK_LIMIT: usize = 100;
+const DEFAULT_LISTENING_STATS_ALBUM_LIMIT: usize = 12;
+const MAX_LISTENING_STATS_ALBUM_LIMIT: usize = 60;
+const DEFAULT_LISTENING_STATS_ALBUM_TRACK_LIMIT: usize = 6;
+const MAX_LISTENING_STATS_ALBUM_TRACK_LIMIT: usize = 20;
+const MAX_LISTENING_SEGMENT_SECONDS: f64 = 4.0 * 60.0 * 60.0;
+const MAX_OPEN_SEGMENT_WALL_SECONDS: f64 = 12.0 * 60.0 * 60.0;
+
+#[derive(Debug, Clone)]
+struct RawListeningHistoryRow {
+    track_id: String,
+    recorded_at: String,
+    payload_json: String,
+    title: String,
+    display_title: String,
+    artist: String,
+    album_artist: String,
+    album: String,
+    track_duration: f64,
+    artwork_text: String,
+    artwork_path: String,
+}
+
+#[derive(Debug, Clone)]
+struct ListeningHistoryEvent {
+    track_id: String,
+    entry_type: String,
+    position: f64,
+    duration: f64,
+    recorded_at: DateTime<Utc>,
+    title: String,
+    artist: String,
+    album: String,
+    album_artist: String,
+    artwork: String,
+}
+
+#[derive(Debug, Clone, Default)]
+struct ListeningStatsDailyAggregate {
+    seconds: f64,
+    play_count: usize,
+}
+
+#[derive(Debug, Clone, Default)]
+struct ListeningStatsTrackAggregate {
+    track_id: String,
+    title: String,
+    artist: String,
+    album: String,
+    album_artist: String,
+    artwork: String,
+    duration: f64,
+    listen_seconds: f64,
+    play_count: usize,
+}
+
+#[derive(Debug, Clone, Default)]
+struct ListeningStatsAlbumAggregate {
+    key: String,
+    album: String,
+    album_artist: String,
+    artwork: String,
+    listen_seconds: f64,
+    play_count: usize,
+    track_ids: HashSet<String>,
+}
+
+fn normalize_listening_stats_limit(
+    value: Option<usize>,
+    default_value: usize,
+    max_value: usize,
+) -> usize {
+    value.unwrap_or(default_value).clamp(1, max_value)
+}
+
+fn normalized_optional_request_text(value: Option<&str>) -> Option<String> {
+    value
+        .map(str::trim)
+        .filter(|text| !text.is_empty())
+        .map(String::from)
+}
+
+fn listening_stats_local_date(timestamp: DateTime<Utc>, timezone_offset_minutes: i32) -> NaiveDate {
+    (timestamp - Duration::minutes(i64::from(timezone_offset_minutes))).date_naive()
+}
+
+fn listening_stats_local_midnight_to_utc(
+    date: NaiveDate,
+    timezone_offset_minutes: i32,
+) -> DateTime<Utc> {
+    let offset = Duration::minutes(i64::from(timezone_offset_minutes));
+    let local_midnight = date
+        .and_hms_opt(0, 0, 0)
+        .unwrap_or_else(|| Utc::now().naive_utc());
+
+    DateTime::<Utc>::from_naive_utc_and_offset(local_midnight + offset, Utc)
+}
+
+fn listening_stats_date_key(date: NaiveDate) -> String {
+    date.format("%Y-%m-%d").to_string()
+}
+
+fn parse_listening_stats_timestamp(value: &str) -> Result<DateTime<Utc>, String> {
+    DateTime::parse_from_rfc3339(value)
+        .map(|timestamp| timestamp.with_timezone(&Utc))
+        .map_err(|error| format!("Failed to parse playback history timestamp '{value}': {error}"))
+}
+
+fn normalized_history_entry_type(value: Option<String>) -> String {
+    value
+        .map(|entry_type| entry_type.trim().to_ascii_lowercase())
+        .filter(|entry_type| !entry_type.is_empty())
+        .unwrap_or_else(|| String::from("played"))
+}
+
+fn nonnegative_finite(value: f64) -> f64 {
+    if value.is_finite() && value > 0.0 {
+        value
+    } else {
+        0.0
+    }
+}
+
+fn create_listening_history_event(
+    row: RawListeningHistoryRow,
+) -> Result<ListeningHistoryEvent, String> {
+    let payload = deserialize_value(&row.payload_json, "desktop listening stats history entry")?;
+    let position = optional_number_as_f64(&payload, "position")
+        .map(nonnegative_finite)
+        .unwrap_or_default();
+    let payload_duration = optional_number_as_f64(&payload, "duration")
+        .map(nonnegative_finite)
+        .unwrap_or_default();
+    let duration = if payload_duration > 0.0 {
+        payload_duration
+    } else {
+        nonnegative_finite(row.track_duration)
+    };
+    let title = if row.display_title.trim().is_empty() {
+        row.title.trim().to_string()
+    } else {
+        row.display_title.trim().to_string()
+    };
+
+    Ok(ListeningHistoryEvent {
+        track_id: row.track_id,
+        entry_type: normalized_history_entry_type(optional_text_field(&payload, "type")),
+        position,
+        duration,
+        recorded_at: parse_listening_stats_timestamp(&row.recorded_at)?,
+        title,
+        artist: row.artist.trim().to_string(),
+        album: row.album.trim().to_string(),
+        album_artist: row.album_artist.trim().to_string(),
+        artwork: resolve_stored_track_artwork(row.artwork_text, row.artwork_path),
+    })
+}
+
+fn ensure_listening_track_aggregate<'a>(
+    tracks: &'a mut HashMap<String, ListeningStatsTrackAggregate>,
+    event: &ListeningHistoryEvent,
+) -> &'a mut ListeningStatsTrackAggregate {
+    let aggregate =
+        tracks
+            .entry(event.track_id.clone())
+            .or_insert_with(|| ListeningStatsTrackAggregate {
+                track_id: event.track_id.clone(),
+                title: event.title.clone(),
+                artist: event.artist.clone(),
+                album: event.album.clone(),
+                album_artist: event.album_artist.clone(),
+                artwork: event.artwork.clone(),
+                duration: event.duration,
+                listen_seconds: 0.0,
+                play_count: 0,
+            });
+
+    if aggregate.artwork.is_empty() && !event.artwork.is_empty() {
+        aggregate.artwork = event.artwork.clone();
+    }
+
+    aggregate
+}
+
+fn listening_album_key(event: &ListeningHistoryEvent) -> String {
+    let album = event.album.trim().to_ascii_lowercase();
+    let album_artist = event.album_artist.trim().to_ascii_lowercase();
+    let artist = event.artist.trim().to_ascii_lowercase();
+
+    format!(
+        "{album}\u{1f}{}\u{1f}{artist}",
+        if album_artist.is_empty() {
+            artist.as_str()
+        } else {
+            album_artist.as_str()
+        }
+    )
+}
+
+fn ensure_listening_album_aggregate<'a>(
+    albums: &'a mut HashMap<String, ListeningStatsAlbumAggregate>,
+    event: &ListeningHistoryEvent,
+) -> &'a mut ListeningStatsAlbumAggregate {
+    let key = listening_album_key(event);
+
+    let aggregate = albums
+        .entry(key.clone())
+        .or_insert_with(|| ListeningStatsAlbumAggregate {
+            key,
+            album: event.album.clone(),
+            album_artist: if event.album_artist.is_empty() {
+                event.artist.clone()
+            } else {
+                event.album_artist.clone()
+            },
+            artwork: event.artwork.clone(),
+            listen_seconds: 0.0,
+            play_count: 0,
+            track_ids: HashSet::new(),
+        });
+
+    if aggregate.artwork.is_empty() && !event.artwork.is_empty() {
+        aggregate.artwork = event.artwork.clone();
+    }
+
+    aggregate
+}
+
+fn add_listening_play_count(
+    event: &ListeningHistoryEvent,
+    daily: &mut BTreeMap<String, ListeningStatsDailyAggregate>,
+    tracks: &mut HashMap<String, ListeningStatsTrackAggregate>,
+    albums: &mut HashMap<String, ListeningStatsAlbumAggregate>,
+    timezone_offset_minutes: i32,
+) {
+    let date_key = listening_stats_date_key(listening_stats_local_date(
+        event.recorded_at,
+        timezone_offset_minutes,
+    ));
+
+    if let Some(day) = daily.get_mut(&date_key) {
+        day.play_count += 1;
+    }
+
+    let track = ensure_listening_track_aggregate(tracks, event);
+    track.play_count += 1;
+    let album = ensure_listening_album_aggregate(albums, event);
+    album.play_count += 1;
+    album.track_ids.insert(event.track_id.clone());
+}
+
+fn add_listening_seconds_to_daily(
+    daily: &mut BTreeMap<String, ListeningStatsDailyAggregate>,
+    start_at: DateTime<Utc>,
+    end_at: DateTime<Utc>,
+    listen_seconds: f64,
+    timezone_offset_minutes: i32,
+) {
+    if listen_seconds <= 0.0 {
+        return;
+    }
+
+    let wall_seconds = (end_at - start_at).num_milliseconds().max(0) as f64 / 1000.0;
+
+    if wall_seconds <= 0.0 {
+        let date_key = listening_stats_date_key(listening_stats_local_date(
+            start_at,
+            timezone_offset_minutes,
+        ));
+
+        if let Some(day) = daily.get_mut(&date_key) {
+            day.seconds += listen_seconds;
+        }
+        return;
+    }
+
+    let mut segment_start = start_at;
+
+    while segment_start < end_at {
+        let local_date = listening_stats_local_date(segment_start, timezone_offset_minutes);
+        let next_date = local_date.succ_opt().unwrap_or(local_date);
+        let next_midnight_utc =
+            listening_stats_local_midnight_to_utc(next_date, timezone_offset_minutes);
+        let segment_end = next_midnight_utc.min(end_at);
+        let segment_wall = (segment_end - segment_start).num_milliseconds().max(0) as f64 / 1000.0;
+
+        if segment_wall <= 0.0 {
+            break;
+        }
+
+        let date_key = listening_stats_date_key(local_date);
+
+        if let Some(day) = daily.get_mut(&date_key) {
+            day.seconds += listen_seconds * (segment_wall / wall_seconds);
+        }
+
+        segment_start = segment_end;
+    }
+}
+
+fn add_listening_seconds(
+    event: &ListeningHistoryEvent,
+    listen_seconds: f64,
+    segment_end: DateTime<Utc>,
+    daily: &mut BTreeMap<String, ListeningStatsDailyAggregate>,
+    tracks: &mut HashMap<String, ListeningStatsTrackAggregate>,
+    albums: &mut HashMap<String, ListeningStatsAlbumAggregate>,
+    timezone_offset_minutes: i32,
+) {
+    let listen_seconds = listen_seconds.max(0.0);
+
+    if listen_seconds <= 0.0 {
+        return;
+    }
+
+    add_listening_seconds_to_daily(
+        daily,
+        event.recorded_at,
+        segment_end,
+        listen_seconds,
+        timezone_offset_minutes,
+    );
+
+    let track = ensure_listening_track_aggregate(tracks, event);
+    track.listen_seconds += listen_seconds;
+    let album = ensure_listening_album_aggregate(albums, event);
+    album.listen_seconds += listen_seconds;
+    album.track_ids.insert(event.track_id.clone());
+}
+
+fn estimate_listening_segment_seconds(
+    opened: &ListeningHistoryEvent,
+    closing: Option<&ListeningHistoryEvent>,
+    segment_end: DateTime<Utc>,
+) -> f64 {
+    let wall_seconds = (segment_end - opened.recorded_at).num_milliseconds().max(0) as f64 / 1000.0;
+
+    if wall_seconds <= 0.0 {
+        return 0.0;
+    }
+
+    let mut listen_seconds = wall_seconds;
+
+    if let Some(closing) = closing.filter(|event| event.track_id == opened.track_id) {
+        let position_delta = closing.position - opened.position;
+
+        if position_delta.is_finite() && position_delta > 0.0 {
+            listen_seconds = position_delta;
+        } else if closing.entry_type == "ended" && opened.duration > opened.position {
+            listen_seconds = opened.duration - opened.position;
+        }
+    }
+
+    if opened.duration > opened.position {
+        listen_seconds = listen_seconds.min(opened.duration - opened.position);
+    }
+
+    listen_seconds
+        .min(wall_seconds)
+        .min(MAX_LISTENING_SEGMENT_SECONDS)
+        .max(0.0)
+}
+
+fn close_listening_segment(
+    opened: &ListeningHistoryEvent,
+    closing: Option<&ListeningHistoryEvent>,
+    segment_end: DateTime<Utc>,
+    daily: &mut BTreeMap<String, ListeningStatsDailyAggregate>,
+    tracks: &mut HashMap<String, ListeningStatsTrackAggregate>,
+    albums: &mut HashMap<String, ListeningStatsAlbumAggregate>,
+    timezone_offset_minutes: i32,
+) {
+    let listen_seconds = estimate_listening_segment_seconds(opened, closing, segment_end);
+
+    add_listening_seconds(
+        opened,
+        listen_seconds,
+        segment_end,
+        daily,
+        tracks,
+        albums,
+        timezone_offset_minutes,
+    );
+}
+
+fn listening_track_rank_from_aggregate(
+    aggregate: &ListeningStatsTrackAggregate,
+) -> ListeningStatsTrackRank {
+    ListeningStatsTrackRank {
+        track_id: aggregate.track_id.clone(),
+        title: aggregate.title.clone(),
+        artist: aggregate.artist.clone(),
+        album: aggregate.album.clone(),
+        album_artist: aggregate.album_artist.clone(),
+        artwork: aggregate.artwork.clone(),
+        duration: aggregate.duration,
+        listen_seconds: aggregate.listen_seconds,
+        play_count: aggregate.play_count,
+    }
+}
+
+fn sort_listening_track_ranks(tracks: &mut [ListeningStatsTrackRank]) {
+    tracks.sort_by(|left, right| {
+        right
+            .listen_seconds
+            .partial_cmp(&left.listen_seconds)
+            .unwrap_or(std::cmp::Ordering::Equal)
+            .then_with(|| right.play_count.cmp(&left.play_count))
+            .then_with(|| left.title.cmp(&right.title))
+    });
+}
+
+fn build_listening_stats_summary(
+    daily: &BTreeMap<String, ListeningStatsDailyAggregate>,
+    tracks: &HashMap<String, ListeningStatsTrackAggregate>,
+    albums: &HashMap<String, ListeningStatsAlbumAggregate>,
+) -> ListeningStatsSummary {
+    let mut active_days = 0;
+    let mut current_streak = 0;
+    let mut longest_streak_days = 0;
+    let mut peak_day: Option<String> = None;
+    let mut peak_day_seconds = 0.0;
+    let mut total_seconds = 0.0;
+    let mut play_count = 0;
+
+    for (date, aggregate) in daily {
+        total_seconds += aggregate.seconds;
+        play_count += aggregate.play_count;
+
+        if aggregate.seconds > 0.0 {
+            active_days += 1;
+            current_streak += 1;
+            longest_streak_days = longest_streak_days.max(current_streak);
+        } else {
+            current_streak = 0;
+        }
+
+        if aggregate.seconds > peak_day_seconds {
+            peak_day_seconds = aggregate.seconds;
+            peak_day = Some(date.clone());
+        }
+    }
+
+    ListeningStatsSummary {
+        total_seconds,
+        play_count,
+        track_count: tracks
+            .values()
+            .filter(|track| track.listen_seconds > 0.0 || track.play_count > 0)
+            .count(),
+        album_count: albums
+            .values()
+            .filter(|album| album.listen_seconds > 0.0 || album.play_count > 0)
+            .count(),
+        active_days,
+        peak_day,
+        peak_day_seconds,
+        longest_streak_days,
+    }
+}
+
+fn build_listening_album_groups(
+    albums: HashMap<String, ListeningStatsAlbumAggregate>,
+    tracks: &HashMap<String, ListeningStatsTrackAggregate>,
+    album_limit: usize,
+    album_track_limit: usize,
+) -> Vec<ListeningStatsAlbumGroup> {
+    let mut groups = albums
+        .into_values()
+        .filter(|album| album.listen_seconds > 0.0 || album.play_count > 0)
+        .map(|album| {
+            let mut album_tracks = album
+                .track_ids
+                .iter()
+                .filter_map(|track_id| tracks.get(track_id))
+                .map(listening_track_rank_from_aggregate)
+                .collect::<Vec<_>>();
+            sort_listening_track_ranks(&mut album_tracks);
+            album_tracks.truncate(album_track_limit);
+
+            ListeningStatsAlbumGroup {
+                key: album.key,
+                album: album.album,
+                album_artist: album.album_artist,
+                artwork: album.artwork,
+                listen_seconds: album.listen_seconds,
+                play_count: album.play_count,
+                track_count: album.track_ids.len(),
+                tracks: album_tracks,
+            }
+        })
+        .collect::<Vec<_>>();
+
+    groups.sort_by(|left, right| {
+        right
+            .listen_seconds
+            .partial_cmp(&left.listen_seconds)
+            .unwrap_or(std::cmp::Ordering::Equal)
+            .then_with(|| right.play_count.cmp(&left.play_count))
+            .then_with(|| left.album.cmp(&right.album))
+    });
+    groups.truncate(album_limit);
+    groups
+}
+
+fn load_listening_stats_from_connection(
+    connection: &Connection,
+    request: &ListeningStatsRequest,
+) -> Result<ListeningStatsSnapshot, String> {
+    let days = normalize_listening_stats_limit(
+        request.days,
+        DEFAULT_LISTENING_STATS_DAYS,
+        MAX_LISTENING_STATS_DAYS,
+    );
+    let track_limit = normalize_listening_stats_limit(
+        request.track_limit,
+        DEFAULT_LISTENING_STATS_TRACK_LIMIT,
+        MAX_LISTENING_STATS_TRACK_LIMIT,
+    );
+    let album_limit = normalize_listening_stats_limit(
+        request.album_limit,
+        DEFAULT_LISTENING_STATS_ALBUM_LIMIT,
+        MAX_LISTENING_STATS_ALBUM_LIMIT,
+    );
+    let album_track_limit = normalize_listening_stats_limit(
+        request.album_track_limit,
+        DEFAULT_LISTENING_STATS_ALBUM_TRACK_LIMIT,
+        MAX_LISTENING_STATS_ALBUM_TRACK_LIMIT,
+    );
+    let timezone_offset_minutes = request.timezone_offset_minutes.unwrap_or(0);
+    let library_id = normalized_optional_request_text(request.library_id.as_deref());
+    let today = listening_stats_local_date(Utc::now(), timezone_offset_minutes);
+    let start_date = today
+        .checked_sub_signed(Duration::days(days.saturating_sub(1) as i64))
+        .unwrap_or(today);
+    let start_at =
+        listening_stats_local_midnight_to_utc(start_date, timezone_offset_minutes).to_rfc3339();
+    let mut daily = BTreeMap::new();
+
+    for day_offset in 0..days {
+        let date = start_date
+            .checked_add_signed(Duration::days(day_offset as i64))
+            .unwrap_or(today);
+        daily.insert(
+            listening_stats_date_key(date),
+            ListeningStatsDailyAggregate::default(),
+        );
+    }
+
+    let mut statement = connection
+        .prepare(
+            "SELECT history.track_id,
+                    history.recorded_at_text,
+                    history.payload_json,
+                    tracks.title,
+                    tracks.display_title,
+                    tracks.artist,
+                    tracks.album_artist,
+                    tracks.album,
+                    tracks.duration,
+                    COALESCE(track_artwork.artwork_text, ''),
+                    COALESCE(track_artwork.artwork_path, '')
+             FROM playback_history history
+             INNER JOIN tracks ON tracks.id = history.track_id
+             LEFT JOIN track_artwork ON track_artwork.track_id = tracks.id
+             WHERE history.recorded_at_text >= ?1
+               AND (?2 IS NULL OR tracks.library_id = ?2)
+             ORDER BY history.recorded_at_text ASC, history.id ASC",
+        )
+        .map_err(|error| format!("Failed to prepare desktop listening stats query: {error}"))?;
+    let rows = statement
+        .query_map(params![start_at, library_id.as_deref()], |row| {
+            Ok(RawListeningHistoryRow {
+                track_id: row.get::<_, String>(0)?,
+                recorded_at: row.get::<_, String>(1)?,
+                payload_json: row.get::<_, String>(2)?,
+                title: row.get::<_, String>(3)?,
+                display_title: row.get::<_, String>(4)?,
+                artist: row.get::<_, String>(5)?,
+                album_artist: row.get::<_, String>(6)?,
+                album: row.get::<_, String>(7)?,
+                track_duration: row.get::<_, f64>(8)?,
+                artwork_text: row.get::<_, String>(9)?,
+                artwork_path: row.get::<_, String>(10)?,
+            })
+        })
+        .map_err(|error| format!("Failed to query desktop listening stats history: {error}"))?;
+    let mut events = Vec::new();
+
+    for row in rows {
+        let row = row.map_err(|error| {
+            format!("Failed to read desktop listening stats history row: {error}")
+        })?;
+        events.push(create_listening_history_event(row)?);
+    }
+
+    let mut tracks: HashMap<String, ListeningStatsTrackAggregate> = HashMap::new();
+    let mut albums: HashMap<String, ListeningStatsAlbumAggregate> = HashMap::new();
+    let mut opened: Option<ListeningHistoryEvent> = None;
+
+    for event in events {
+        if let Some(opened_event) = opened.as_ref() {
+            let should_close = event.entry_type == "played"
+                || event.entry_type == "paused"
+                || event.entry_type == "ended"
+                || event.track_id != opened_event.track_id;
+
+            if should_close {
+                close_listening_segment(
+                    opened_event,
+                    Some(&event),
+                    event.recorded_at,
+                    &mut daily,
+                    &mut tracks,
+                    &mut albums,
+                    timezone_offset_minutes,
+                );
+                opened = None;
+            }
+        }
+
+        if event.entry_type == "played" {
+            add_listening_play_count(
+                &event,
+                &mut daily,
+                &mut tracks,
+                &mut albums,
+                timezone_offset_minutes,
+            );
+            opened = Some(event);
+        }
+    }
+
+    if let Some(opened_event) = opened.as_ref() {
+        let now = Utc::now();
+        let wall_seconds =
+            (now - opened_event.recorded_at).num_milliseconds().max(0) as f64 / 1000.0;
+
+        if wall_seconds > 0.0 && wall_seconds <= MAX_OPEN_SEGMENT_WALL_SECONDS {
+            close_listening_segment(
+                opened_event,
+                None,
+                now,
+                &mut daily,
+                &mut tracks,
+                &mut albums,
+                timezone_offset_minutes,
+            );
+        }
+    }
+
+    let summary = build_listening_stats_summary(&daily, &tracks, &albums);
+    let mut top_tracks = tracks
+        .values()
+        .filter(|track| track.listen_seconds > 0.0 || track.play_count > 0)
+        .map(listening_track_rank_from_aggregate)
+        .collect::<Vec<_>>();
+    sort_listening_track_ranks(&mut top_tracks);
+    top_tracks.truncate(track_limit);
+
+    let daily = daily
+        .into_iter()
+        .map(|(date, aggregate)| ListeningStatsDailyBucket {
+            date,
+            seconds: aggregate.seconds,
+            play_count: aggregate.play_count,
+        })
+        .collect();
+    let album_groups =
+        build_listening_album_groups(albums, &tracks, album_limit, album_track_limit);
+
+    Ok(ListeningStatsSnapshot {
+        generated_at: current_iso_timestamp(),
+        library_id,
+        days,
+        summary,
+        daily,
+        top_tracks,
+        album_groups,
+    })
 }
 
 fn upsert_history_entries(transaction: &Transaction<'_>, entries: &[Value]) -> Result<(), String> {
