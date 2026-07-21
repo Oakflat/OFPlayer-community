@@ -36,6 +36,7 @@ const SettingsModal = defineAsyncComponent(() => import('./components/SettingsMo
 const ExternalLibraryDialog = defineAsyncComponent(() => import('./components/ExternalLibraryDialog.vue'))
 const OnboardingGuide = defineAsyncComponent(() => import('./components/OnboardingGuide.vue'))
 const TelemetryConsentDialog = defineAsyncComponent(() => import('./components/TelemetryConsentDialog.vue'))
+const ListeningStatsPanel = defineAsyncComponent(() => import('./components/ListeningStatsPanel.vue'))
 
 const ONBOARDING_KEY = 'ofplayer:onboarding:seen:v1'
 const IMMERSIVE_CLOSE_RESTORE_FALLBACK_MS = 900
@@ -137,6 +138,7 @@ const {
   immersiveTaskbarMode,
   licenseFeatureLimits,
   telemetryEnabled,
+  historyRevision,
   searchQuery,
   sortOption,
   activeSortOption,
@@ -208,6 +210,7 @@ const {
   clearLyricsBinding,
   refreshStorageUsage,
   collectStorageGarbage,
+  loadListeningStats,
   resetAllData,
   checkForUpdates,
   downloadAndInstallUpdate,
@@ -350,6 +353,7 @@ const isImmersiveWindowed = computed(
   () => showsCustomTitlebar && immersiveTaskbarMode.value !== IMMERSIVE_TASKBAR_MODES.HIDE,
 )
 const isExternalLibraryDialogOpen = ref(false)
+const isListeningStatsOpen = ref(false)
 const isConnectingExternalLibrary = ref(false)
 const externalLibraryError = ref('')
 const REMOTE_PROBE_SYNC_PROVIDERS = new Set(['subsonic'])
@@ -1064,6 +1068,22 @@ function closeExternalLibraryDialog() {
   isExternalLibraryDialogOpen.value = false
 }
 
+function openListeningStats() {
+  isListeningStatsOpen.value = true
+}
+
+function closeListeningStats() {
+  isListeningStatsOpen.value = false
+}
+
+async function handleLoadListeningStats(request: UnknownRecord) {
+  return loadListeningStats(request)
+}
+
+function handleSelectStatsTrack(trackId: string) {
+  void selectTrack(trackId)
+}
+
 function createIdleRemoteProbeStatus(libraryId = ''): RemoteLibraryProbeStatus {
   return {
     active: false,
@@ -1343,6 +1363,7 @@ async function handleProbeRemoteLibrary(libraryId?: string) {
           @set-active-library="setActiveLibrary"
           @set-active-collection="setActiveCollection"
           @open-settings="openSettings"
+          @open-listening-stats="openListeningStats"
           @create-library="createLibrary"
           @rename-library="renameLibrary"
           @delete-library="deleteLibrary"
@@ -1517,6 +1538,16 @@ async function handleProbeRemoteLibrary(libraryId?: string) {
         @upload-diagnostics-report="handleUploadDiagnosticsReport"
         @check-app-update="handleCheckForUpdates"
         @download-and-install-update="handleDownloadAndInstallUpdate"
+      />
+
+      <ListeningStatsPanel
+        :is-open="isListeningStatsOpen"
+        :library-id="activeLibraryItem?.id ?? activeLibrary"
+        :library-name="activeLibraryItem?.label ?? ''"
+        :revision="historyRevision"
+        :load-stats="handleLoadListeningStats"
+        @close="closeListeningStats"
+        @select-track="handleSelectStatsTrack"
       />
 
       <ExternalLibraryDialog

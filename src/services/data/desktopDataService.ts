@@ -60,6 +60,16 @@ function createRuntimeTrackFromPersistedTrack(record: DesktopRecord): DesktopRec
   }
 }
 
+function normalizeDesktopArtwork(value: unknown): string {
+  const artwork = typeof value === 'string' ? value.trim() : ''
+
+  if (!artwork || !isLocalAssetPath(artwork)) {
+    return artwork
+  }
+
+  return isTauri() ? convertFileSrc(artwork) : ''
+}
+
 function withDesktopDriver(preferences: unknown = {}): DesktopRecord {
   const record = normalizeObject(preferences)
 
@@ -202,6 +212,84 @@ function normalizePlaybackCommandResult(result: unknown = {}): DesktopRecord {
     session: createSessionSnapshotModel(record?.session ?? {}),
     playback: normalizeObject(record?.playback),
     historyEntries: normalizeRecordArray(record?.historyEntries).map((entry) => createPlaybackHistoryEntryModel(entry)),
+  }
+}
+
+function normalizeFiniteNumber(value: unknown, fallback = 0): number {
+  return Number.isFinite(value) ? Number(value) : fallback
+}
+
+function normalizeNonNegativeNumber(value: unknown, fallback = 0): number {
+  return Math.max(0, normalizeFiniteNumber(value, fallback))
+}
+
+function normalizeNonNegativeInteger(value: unknown, fallback = 0): number {
+  return Number.isInteger(value) && Number(value) >= 0 ? Number(value) : fallback
+}
+
+function normalizeListeningStatsSummary(value: unknown = {}): DesktopRecord {
+  const record = normalizeObject(value)
+
+  return {
+    totalSeconds: normalizeNonNegativeNumber(record.totalSeconds),
+    playCount: normalizeNonNegativeInteger(record.playCount),
+    trackCount: normalizeNonNegativeInteger(record.trackCount),
+    albumCount: normalizeNonNegativeInteger(record.albumCount),
+    activeDays: normalizeNonNegativeInteger(record.activeDays),
+    peakDay: typeof record.peakDay === 'string' ? record.peakDay : null,
+    peakDaySeconds: normalizeNonNegativeNumber(record.peakDaySeconds),
+    longestStreakDays: normalizeNonNegativeInteger(record.longestStreakDays),
+  }
+}
+
+function normalizeListeningStatsTrack(value: unknown = {}): DesktopRecord {
+  const record = normalizeObject(value)
+
+  return {
+    trackId: typeof record.trackId === 'string' ? record.trackId : '',
+    title: typeof record.title === 'string' ? record.title : '',
+    artist: typeof record.artist === 'string' ? record.artist : '',
+    album: typeof record.album === 'string' ? record.album : '',
+    albumArtist: typeof record.albumArtist === 'string' ? record.albumArtist : '',
+    artwork: normalizeDesktopArtwork(record.artwork),
+    duration: normalizeNonNegativeNumber(record.duration),
+    listenSeconds: normalizeNonNegativeNumber(record.listenSeconds),
+    playCount: normalizeNonNegativeInteger(record.playCount),
+  }
+}
+
+function normalizeListeningStatsAlbumGroup(value: unknown = {}): DesktopRecord {
+  const record = normalizeObject(value)
+
+  return {
+    key: typeof record.key === 'string' ? record.key : '',
+    album: typeof record.album === 'string' ? record.album : '',
+    albumArtist: typeof record.albumArtist === 'string' ? record.albumArtist : '',
+    artwork: normalizeDesktopArtwork(record.artwork),
+    listenSeconds: normalizeNonNegativeNumber(record.listenSeconds),
+    playCount: normalizeNonNegativeInteger(record.playCount),
+    trackCount: normalizeNonNegativeInteger(record.trackCount),
+    tracks: normalizeRecordArray(record.tracks).map((track) => normalizeListeningStatsTrack(track)),
+  }
+}
+
+function normalizeListeningStatsSnapshot(value: unknown = {}): DesktopRecord {
+  const record = normalizeObject(value)
+
+  return {
+    generatedAt: typeof record.generatedAt === 'string' ? record.generatedAt : '',
+    libraryId: typeof record.libraryId === 'string' ? record.libraryId : null,
+    days: normalizeNonNegativeInteger(record.days, 365),
+    summary: normalizeListeningStatsSummary(record.summary),
+    daily: normalizeRecordArray(record.daily)
+      .map((day) => ({
+        date: typeof day.date === 'string' ? day.date : '',
+        seconds: normalizeNonNegativeNumber(day.seconds),
+        playCount: normalizeNonNegativeInteger(day.playCount),
+      }))
+      .filter((day) => day.date),
+    topTracks: normalizeRecordArray(record.topTracks).map((track) => normalizeListeningStatsTrack(track)),
+    albumGroups: normalizeRecordArray(record.albumGroups).map((album) => normalizeListeningStatsAlbumGroup(album)),
   }
 }
 
@@ -1116,6 +1204,28 @@ function normalizeLibraryImportResult(result: unknown = {}) {
       async loadRecent(limit = 50) {
         await ensureHistoryBootstrapped()
         return loadDesktopHistory(limit)
+      },
+      async loadStats({
+        libraryId = null,
+        days = 365,
+        trackLimit = 24,
+        albumLimit = 12,
+        albumTrackLimit = 6,
+        timezoneOffsetMinutes = 0,
+      }: DesktopRecord = {}) {
+        await ensureHistoryBootstrapped()
+        return normalizeListeningStatsSnapshot(
+          await invoke('desktop_history_load_stats', {
+            request: {
+              libraryId,
+              days,
+              trackLimit,
+              albumLimit,
+              albumTrackLimit,
+              timezoneOffsetMinutes,
+            },
+          }),
+        )
       },
       async append(entry: DesktopRecord) {
         await ensureHistoryBootstrapped()

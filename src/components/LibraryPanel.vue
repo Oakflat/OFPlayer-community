@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Plus, MoreHorizontal, Cloud, Disc2, Disc3, FolderOpen, HardDriveDownload, Heart, History, Library, ListMusic, Settings2, Users } from 'lucide-vue-next'
+import { BarChart3, Plus, MoreHorizontal, Cloud, Disc2, Disc3, FolderOpen, HardDriveDownload, Heart, History, Library, ListMusic, Settings2, Users } from 'lucide-vue-next'
 import { computed, ref, type Component } from 'vue'
 import { useI18n } from '../composables/useI18n'
 import { parseCollectionRef } from '../models/collection'
@@ -97,6 +97,7 @@ const emit = defineEmits<{
   'set-active-library': [libraryKey: string]
   'set-active-collection': [collectionKey: string]
   'open-settings': []
+  'open-listening-stats': []
   'create-library': [name: string]
   'rename-library': [libraryKey: string, name: string]
   'delete-library': [libraryKey: string]
@@ -186,6 +187,18 @@ const libraryActionsMenuItems = computed<MenuDropdownItem[]>(() => [
     key: 'connect-external-library',
     label: t('sidebar.connectExternalLibrary'),
     disabled: !canConnectLibrary.value,
+  },
+])
+const utilityMenuItems = computed<MenuDropdownItem[]>(() => [
+  {
+    key: 'settings',
+    label: t('sidebar.settings'),
+    icon: Settings2,
+  },
+  {
+    key: 'listening-stats',
+    label: t('sidebar.listeningStats'),
+    icon: BarChart3,
   },
 ])
 
@@ -311,6 +324,16 @@ function handleLibraryActionsSelect(action: MenuDropdownItem) {
     openCreateLibraryDialog()
   } else if (action.key === 'connect-external-library') {
     emit('open-external-library')
+  }
+}
+
+function handleUtilityMenuSelect(action: MenuDropdownItem) {
+  closeMenu()
+
+  if (action.key === 'settings') {
+    emit('open-settings')
+  } else if (action.key === 'listening-stats') {
+    emit('open-listening-stats')
   }
 }
 
@@ -655,12 +678,27 @@ function closeDialog() {
         multiple
         @change="handleImport"
       />
-      <button class="sidebar-settings" type="button" @click="emit('open-settings')">
-        <span class="sidebar-settings-icon-wrap" aria-hidden="true">
-          <Settings2 class="sidebar-settings-icon" />
-        </span>
-        <span class="sidebar-settings-name">{{ t('sidebar.settings') }}</span>
-      </button>
+      <div class="sidebar-utility-row">
+        <button
+          class="sidebar-settings sidebar-utility-button"
+          type="button"
+          aria-haspopup="menu"
+          :aria-expanded="openMenuKey === 'sidebar-utilities'"
+          @click="toggleMenu('sidebar-utilities', $event)"
+        >
+          <span class="sidebar-settings-icon-wrap" aria-hidden="true">
+            <Settings2 class="sidebar-settings-icon" />
+          </span>
+          <span class="sidebar-settings-name">{{ t('sidebar.settings') }}</span>
+        </button>
+        <MenuDropdown
+          :is-open="openMenuKey === 'sidebar-utilities'"
+          :anchor-el="openMenuKey === 'sidebar-utilities' ? menuAnchorEl : null"
+          :items="utilityMenuItems"
+          @close="closeMenu"
+          @select="handleUtilityMenuSelect"
+        />
+      </div>
     </div>
 
     <DialogModal
@@ -699,7 +737,7 @@ function closeDialog() {
   background: transparent;
   color: var(--ink-muted);
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: opacity var(--transition-fast), background-color var(--transition-fast), color var(--transition-fast);
   opacity: 0;
 }
 
@@ -776,7 +814,7 @@ function closeDialog() {
   background: transparent;
   color: var(--ink-muted);
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: opacity var(--transition-fast), background-color var(--transition-fast), color var(--transition-fast);
   transform: translateY(-50%);
   opacity: 0;
   z-index: 3;
@@ -797,5 +835,21 @@ function closeDialog() {
 .sidebar-selector-more svg {
   width: 16px;
   height: 16px;
+}
+
+.sidebar-utility-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-2);
+}
+
+.sidebar-utility-button {
+  min-width: 0;
+}
+
+.sidebar-utility-button .sidebar-settings-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 </style>

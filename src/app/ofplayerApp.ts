@@ -2501,6 +2501,10 @@ export async function createOFPlayerApp(options: OFPlayerAppOptions = {}): Promi
     }
   }
 
+  async function loadListeningStats(request: UnknownRecord = {}) {
+    return dataService.history.loadStats(request)
+  }
+
   async function reorderPlaylistTracks({ playlistId, orderedTrackIds }: { playlistId: string; orderedTrackIds: string[] }) {
     return libraryStore.reorderPlaylistTracks({
       playlistId,
@@ -2892,6 +2896,7 @@ export async function createOFPlayerApp(options: OFPlayerAppOptions = {}): Promi
     licenseFeatureLimits,
     telemetryEnabled: preferencesStore.telemetryEnabled,
     recentHistory: playerStore.recentHistory,
+    historyRevision: playerStore.historyRevision,
     queueTrackIds: sessionStore.queueTrackIds,
     searchQuery: preferencesStore.searchQuery,
     sortOption: preferencesStore.sortOption,
@@ -2967,6 +2972,7 @@ export async function createOFPlayerApp(options: OFPlayerAppOptions = {}): Promi
     clearLyricsBinding,
     refreshStorageUsage,
     collectStorageGarbage,
+    loadListeningStats,
     resetAllData,
     checkForUpdates: appUpdateService.checkForUpdates,
     downloadAndInstallUpdate: appUpdateService.downloadAndInstallUpdate,
