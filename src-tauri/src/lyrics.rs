@@ -1538,7 +1538,7 @@ fn decode_text_bytes(bytes: &[u8]) -> String {
 fn decode_utf16_bytes(bytes: &[u8], little_endian: bool) -> String {
     let mut utf16 = Vec::with_capacity(bytes.len() / 2);
 
-    for chunk in bytes.chunks_exact(2) {
+    for chunk in bytes.as_chunks::<2>().0 {
         let code_unit = if little_endian {
             u16::from_le_bytes([chunk[0], chunk[1]])
         } else {
@@ -1635,6 +1635,28 @@ pub fn find_active_line_index(lines: &[LyricsLine], position_seconds: f64) -> Op
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn decodes_utf16_lyrics_with_both_byte_orders_and_incomplete_tail() {
+        for little_endian in [true, false] {
+            let expected = "歌词 🎵";
+            let mut bytes: Vec<u8> = expected
+                .encode_utf16()
+                .flat_map(|unit| {
+                    if little_endian {
+                        unit.to_le_bytes()
+                    } else {
+                        unit.to_be_bytes()
+                    }
+                })
+                .collect();
+            assert_eq!(super::decode_utf16_bytes(&bytes, little_endian), expected);
+            bytes.push(0xff);
+            assert_eq!(super::decode_utf16_bytes(&bytes, little_endian), expected);
+        }
+        assert_eq!(super::decode_utf16_bytes(&[], true), "");
+        assert_eq!(super::decode_utf16_bytes(&[0x00, 0xd8], true), "\u{fffd}");
+    }
+
     use super::{
         build_candidate_from_text, build_combined_embedded_synced_candidate, build_synced_lines,
         collect_sidecar_paths, find_active_line_index, parse_lyrics_text, score_sidecar_path,

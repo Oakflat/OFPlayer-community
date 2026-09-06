@@ -6,7 +6,7 @@ OFPlayer Tauri Community 是 OFPlayer 的桌面社区版本。它保留 Vue + Vi
 
 当前版本为 `26.0.4`，包含新一轮视觉调整和完全在本地生成的聆听统计功能。
 
-主线现已同步 SVG 音乐图标、曲目导航预览、英文布局和动效细调。完整入场与减少动效均可通过本地 UI 预览检查，详细说明见 [界面更新记录](docs/ui-refinement-2026-09-06.md)。
+主线现已同步曲目列表左侧的音符导航与歌曲封面缩略图预览，以及 SVG 音乐图标、英文布局和动效细调。使用方法与维护说明见 [界面更新记录](docs/ui-refinement-2026-09-06.md)。
 
 这个仓库面向公开社区维护，移除了私有账号层级、官方更新器、商店打包流程和远程诊断上传，保留可本地构建、可审阅、可二次开发的桌面播放器基线。
 
@@ -43,6 +43,7 @@ OFPlayer Tauri Community 适合：
 | 本地导入 | 导入本地音频并解析元数据 |
 | SQLite catalog | 使用 SQLite 保存曲库、播放列表、会话和偏好 |
 | 播放队列 | 支持队列、上一首、下一首和会话恢复 |
+| 缩略图导航 | 超过 40 首时在列表左边缘展开音符导航，悬停预览每组 5 首的封面和标题，点击定位 |
 | 聆听统计 | 基于本地播放历史展示时长、热力图、单曲排行和专辑分布 |
 | 歌词系统 | 支持歌词显示、解析和歌词胶囊窗口 |
 | 沉浸播放 | 使用 WebGL 背景渲染沉浸式播放器 |
@@ -68,9 +69,9 @@ OFPlayer Tauri Community 适合：
 
 ### 环境要求
 
-- Node.js 18+
+- Node.js 22.12+（CI 使用 Node 22）
 - npm
-- Rust
+- Rust / rustup：根目录 `rust-toolchain.toml` 固定为 1.98.0，并声明 rustfmt、Clippy；本地和 CI 使用同一版本
 - Tauri 2 所需系统依赖
 
 Tauri 环境准备可参考官方 prerequisites 文档：<https://tauri.app/start/prerequisites/>
@@ -78,13 +79,13 @@ Tauri 环境准备可参考官方 prerequisites 文档：<https://tauri.app/star
 ### 安装与运行
 
 ```bash
-npm install
+npm ci
 npm run tauri:dev
 ```
 
 桌面开发使用 `http://localhost:15573`；Vite 从 `src-tauri/tauri.conf.json` 的 `build.devUrl` 读取端口，HMR 共用端口。社区版端口与主产品开发端口分开，避免同时调试时冲突。如果出现 `EACCES`，用 `netsh interface ipv4 show excludedportrange protocol=tcp` 检查 Windows 的保留端口。
 
-运行 `npm run dev:ui` 后，打开 `http://localhost:15583/scripts/ui-preview.html` 可切换语言、主题、明暗与动效，检查设置、专辑、沉浸播放器和 Navigation 导航条。此入口使用样例数据，不连接桌面数据库；不执行导入、实际音频播放、更新或删除，也不进入发布构建。图标预览位于 `/scripts/music-icons.html`。完成后用 Ctrl+C 停止预览服务器。
+界面检查直接使用 `npm run tauri:dev`：导入超过 40 首歌曲后，将鼠标移到曲目列表左边缘查看音符导航和封面预览，再检查中英文、明暗主题和“减少动效”。不要同时在 15573 上启动另一个 `npm run dev`，以免占用 Tauri 的前端端口。
 
 ### 常用命令
 
@@ -95,17 +96,18 @@ npm run tauri:dev
 | `npm run test:unit` | 运行前端单元测试 |
 | `npm run check:tauri-commands` | 校验 Tauri command 和权限清单 |
 | `npm run tauri:dev` | 启动 Tauri 开发模式 |
-| `npm run tauri:build` | 构建桌面应用 |
-| `npm run tauri:build:all` | 构建 NSIS/MSI 安装包 |
+| `npm run tauri:build` | 编译桌面应用可执行文件，跳过安装器打包 |
+
+Windows 默认输出为 `src-tauri/target/release/ofplayer-tauri.exe`。社区源码保留构建和运行需要的应用图标、权限配置与 Node 脚本，移除了 PowerShell 辅助脚本、NSIS/WiX 安装器、商店专用图标、设计画板及临时预览页面。安装器命令已移除，Tauri 的 `bundle.active` 为 `false`。
 
 ### Rust 后端检查
 
 ```bash
 cd src-tauri
-cargo fmt
-cargo check
-cargo test
-cargo clippy --all-targets -- -D warnings
+cargo fmt --all -- --check
+cargo check --locked
+cargo test --locked
+cargo clippy --locked --all-targets -- -D warnings
 ```
 
 ## 代码结构
@@ -127,9 +129,10 @@ ofplayer-tauri/
 │  ├─ permissions/         # 自动生成的权限清单
 │  └─ Cargo.toml           # Rust 依赖配置
 ├─ docs/                   # 技术文档
-├─ scripts/                # 构建与校验脚本
+├─ scripts/                # 跨平台 Tauri 启动与 command 校验
 ├─ public/                 # 静态资源
 ├─ vite.config.ts          # Vite 配置
+├─ rust-toolchain.toml     # 本地与 CI 共用的 Rust 工具链
 └─ package.json
 ```
 
@@ -160,6 +163,8 @@ ofplayer-tauri/
 
 ## 文档
 
+- [界面更新记录](docs/ui-refinement-2026-09-06.md)：左侧歌曲缩略图预览、SVG 图标、英文适配与动画曲线
+- [音乐图标维护](src/components/icons/README.md)：实际运行的内联 SVG 源文件与修改方式
 - [docs](docs/)：桌面端技术文档
 - [docs/startup-performance-optimization.md](docs/startup-performance-optimization.md)：启动性能优化记录
 - [docs/lyric-capsule.md](docs/lyric-capsule.md)：歌词胶囊说明
@@ -174,7 +179,10 @@ npm run build
 npm run test:unit
 npm run check:tauri-commands
 cd src-tauri
-cargo check
+cargo fmt --all -- --check
+cargo check --locked
+cargo test --locked
+cargo clippy --locked --all-targets -- -D warnings
 ```
 
 ## 许可证

@@ -29,47 +29,21 @@
       "csp": null,
       "assetProtocol": {
         "enable": true,
-        "scope": ["$LOCALDATA/ofplayer/track-artwork/**"]
+        "scope": [
+          "$LOCALDATA/ofplayer/track-artwork/**"
+        ]
       }
     }
   },
   "bundle": {
-    "active": true,
+    "active": false,
     "createUpdaterArtifacts": false,
-    "targets": ["nsis"],
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
-    ],
-    "windows": {
-      "nsis": {
-        "installerIcon": "icons/icon.ico",
-        "headerImage": "installer/nsis-header.bmp",
-        "sidebarImage": "installer/nsis-sidebar.bmp",
-        "languages": ["English", "SimpChinese"],
-        "customLanguageFiles": {
-          "English": "installer/nsis/English.nsh",
-          "SimpChinese": "installer/nsis/SimpChinese.nsh"
-        },
-        "installerHooks": "installer/nsis-hooks.nsh",
-        "displayLanguageSelector": true,
-        "installMode": "currentUser"
-      },
-      "wix": {
-        "bannerPath": "installer/wix-banner.bmp",
-        "dialogImagePath": "installer/wix-dialog.bmp",
-        "language": {
-          "en-US": {
-            "localePath": "installer/wix/en-US.wxl"
-          },
-          "zh-CN": {
-            "localePath": "installer/wix/zh-CN.wxl"
-          }
-        }
-      }
-    }
+    ]
   }
 }

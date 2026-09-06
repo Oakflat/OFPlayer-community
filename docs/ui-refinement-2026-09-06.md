@@ -1,32 +1,63 @@
-# Community UI refinement · 2026-09-06
+# 曲目缩略图导航与界面微调
 
-This source update brings the desktop UI refinements into the community baseline. The application version remains 26.0.4; this update does not publish a new installer or replace the existing release tag.
+更新日期：2026-09-06。适用于当前 `26.0.4` 源码，版本号与既有发布标签保持不变。
 
-- Use the supplied grouped SVG contours for 12 navigation/action icons and 8 music symbols for track navigation. Icons inherit interface colors and remain decorative inside labeled controls.
-- Add track-group previews and bounded Bezier scrolling for long lists, with immediate jumps when reduced motion is enabled.
-- Improve English settings/sidebar wrapping and format dates/numbers using the selected UI language.
-- Coordinate startup motion, remove icon spins, cap list stagger delays, and apply separate enter/exit curves. Menus use 220/140ms, dialogs 320/180ms, and immersive view 520/260ms.
-- Suppress animation delays as well as durations for app/system reduced-motion preferences. Preserve menu position until exit completes and let nested modal animation finish before teardown.
-- Read the desktop dev port from Tauri configuration (15573), share the HMR port, and use 15583 for independent fixture previews.
+## 左侧歌曲缩略图预览
 
-## Maintenance
+当前列表超过 40 首时，将鼠标移到**曲目列表内部的左边缘**，会显示一列音符导航。悬停或键盘聚焦音符后，旁边展开该组歌曲的封面缩略图和标题；没有封面的歌曲显示文字占位。点击音符可滚动到对应组的第一首。
 
-Motion tokens are at the top of `src/style.css`. JavaScript rail scrolling in `src/components/trackNavRailModel.ts` matches `cubic-bezier(0.22, 1, 0.36, 1)`; update its numerical tests alongside curve changes. Icon sources, group mapping and regeneration instructions live in `src/assets/music-icons/README.md`.
+- 每组 5 首，最多显示 40 个导航标记；更长的列表按比例选取标记，覆盖整份列表。
+- 预览遵循当前曲库、歌单、搜索和排序结果，每次最多加载 5 首。更换列表条件后清空旧预览缓存。
+- 点击定位采用随距离变化的 240–560 ms 缓动，并限制在可滚动范围内。用户滚轮或按下指针会中断定位，连续点击会改为新的目标。
+- 启用应用内或系统的“减少动效”后，直接定位到目标。离开左侧区域后导航延迟收起；停留在预览上或保持键盘焦点时继续显示。
 
-Run `npm run dev:ui` and open `/scripts/ui-preview.html` for language/theme/motion controls, settings, album views, immersive playback layout and a Navigation scrolling fixture. `/scripts/music-icons.html` shows the standalone icon set. These pages do not enter the production build or call the desktop backend.
+维护入口：`src/components/TrackNavRail.vue`、`trackNavRailModel.ts` 和 `PlayerPanel.vue`。导航宽度、预览卡片位置与分组算法需要同时考虑短列表、超长列表和末尾不足 5 首的情况。
 
-## Community boundary
+## SVG 图标与英文适配
 
-The patch retains the community package identity, dependencies, licenses and local-only diagnostics. It does not add the private account/entitlement service, official updater, Store packaging, Hub implementation or remote diagnostics upload.
+侧栏及操作区采用用户提供的 12 组 SVG 图标，曲目导航使用 8 个音乐符号。保留原有轮廓，以统一描边和界面颜色适配明暗主题、选中与悬停状态。实际渲染入口位于 `src/components/icons/MusicIcon.ts`。
 
-## Validation
+英文侧栏标签允许自然换行，数量列保持独立对齐；设置导航与弹窗为长文案保留空间，必要时允许滚动。日期和数字遵循应用选择的语言，避免系统语言与界面语言不一致。可交互图标沿用所属控件的文字标签和无障碍名称。
 
-Local validation on Windows passed:
+## 动画曲线
 
-- `npm run build` (including TypeScript checks).
-- `npm run test:unit`: 73 tests.
-- `npm run check:tauri-commands`: 82 commands synchronized.
-- `cargo check --locked`, `cargo fmt --all -- --check`, and `cargo clippy --locked --all-targets -- -D warnings`.
-- `cargo test --locked`: 67 tests.
+统一变量位于 `src/style.css`。不同场景使用各自的入场、退出和布局曲线，目标是响应及时、减速自然。
 
-The strict Rust gate also removed an unused artwork lookup left behind by the community split and replaced a manual listening-duration bound with `clamp`. No lint suppression was added. GitHub CI runs independently on the pushed commit.
+| 场景 | 曲线 / 时长 |
+| --- | --- |
+| 常规交互反馈 | `cubic-bezier(0.25, 0.1, 0.25, 1)` |
+| 布局与容器变化 | `cubic-bezier(0.32, 0.72, 0, 1)` |
+| 入场与曲目定位 | `cubic-bezier(0.22, 1, 0.36, 1)` |
+| 退出 | `cubic-bezier(0.4, 0, 1, 1)` |
+| 菜单入场 / 退出 | 220 / 140 ms |
+| 弹窗入场 / 退出 | 320 / 180 ms |
+| 沉浸界面入场 / 退出 | 520 / 260 ms |
+
+启动入场收敛到约 400 ms，取消图标旋转，并限制长列表的逐项延迟。菜单在退出完成前保留位置，嵌套弹窗等待子层动画完成再移除。“减少动效”同时清除持续时间和延迟；播放进度等连续状态仍保持线性。
+
+## 开发与验证
+
+Rust 版本由根目录 `rust-toolchain.toml` 固定为 1.98.0，CI 和本地共同读取该文件。CI 保留格式、编译、测试和 `-D warnings` 的 Clippy 检查。此次修复了新工具链报告的 UTF-16 字节分组问题，并覆盖歌词大小端、代理对和不完整尾字节的解码回归。
+
+桌面开发端口来自 `src-tauri/tauri.conf.json` 的 `build.devUrl`，Vite 和 HMR 共用该端口。完整开发命令与端口排查见根目录 [README](../README.md)。
+
+提交前运行：
+
+```bash
+npm run check:tauri-commands
+npm test
+npm run build
+cd src-tauri
+cargo fmt --all -- --check
+cargo check --locked
+cargo test --locked
+cargo clippy --locked --all-targets -- -D warnings
+```
+
+界面检查：在超过 40 首的曲目列表中检查左侧展开、封面缺失占位、首尾组定位、筛选后预览、手动滚动中断；切换中英文、明暗主题及“减少动效”，检查侧栏、菜单、设置弹窗和沉浸界面。
+
+## 社区源码范围
+
+社区版使用开发端口 15573，保留独立包名、应用标识、MIT / Apache-2.0 许可证及本地诊断能力。账号权益、官方更新器、商店发布和远程诊断上传仍不属于社区版。
+
+`npm run tauri:build` 编译应用并跳过安装器，Windows 默认产物为 `src-tauri/target/release/ofplayer-tauri.exe`。仓库仅保留运行、编译与校验所需资源；PowerShell 辅助脚本、NSIS/WiX 资源、商店图标、设计画板和临时预览页面已经移除。图标直接维护内联 SVG 源文件，见 [音乐图标说明](../src/components/icons/README.md)。

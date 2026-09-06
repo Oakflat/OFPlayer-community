@@ -22,10 +22,8 @@ jobs:
           node-version: 22
           cache: npm
 
-      - name: Setup Rust
-        run: |
-          rustup toolchain install stable --profile minimal
-          rustup component add rustfmt clippy --toolchain stable
+      - name: Setup pinned Rust toolchain
+        run: rustup show
 
       - name: Install frontend dependencies
         run: npm ci

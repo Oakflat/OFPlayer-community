@@ -1,9 +1,11 @@
 # OFPlayer Tauri v26.0.0 开发者指南
 
+> 架构章节保留 26.0.0 基线；环境、端口和构建命令已按当前社区源码更新。最新界面功能见 [缩略图导航与界面微调](../ui-refinement-2026-09-06.md)。
+
 ## 环境要求
 
-- **Node.js**：18+
-- **Rust**：最新 stable（通过 rustup 安装）
+- **Node.js**：22.12+（CI 使用 Node 22）
+- **Rust**：通过 rustup 安装，自动使用根目录 `rust-toolchain.toml` 固定的 1.98.0
 - **Tauri 前置依赖**：https://tauri.app/start/prerequisites/
   - Windows: WebView2、Visual Studio Build Tools
 
@@ -12,8 +14,8 @@
 ### 前端（在 `ofplayer-tauri/` 执行）
 
 ```bash
-npm install              # 安装依赖
-npm run dev              # 启动 Vite 开发服务器 (port 5173)
+npm ci                   # 按锁文件安装依赖
+npm run dev              # 启动 Vite 开发服务器 (port 15573)
 npm run build            # 构建前端产物到 dist/
 ```
 
@@ -21,7 +23,7 @@ npm run build            # 构建前端产物到 dist/
 
 ```bash
 npm run tauri:dev        # 启动 Tauri 开发模式（前端 + Rust 后端）
-npm run tauri:build      # 构建完整安装包
+npm run tauri:build      # 编译桌面可执行文件，跳过安装器
 ```
 
 ### Rust 后端（在 `src-tauri/` 执行）
@@ -187,19 +189,19 @@ cargo test
 npm run tauri:dev
 ```
 
-### 安装包构建
+### 桌面应用构建
 
 ```bash
 npm run tauri:build
 ```
 
-产物在 `src-tauri/target/release/bundle/`。
+Windows 默认产物为 `src-tauri/target/release/ofplayer-tauri.exe`。社区源码不包含安装器资源或 PowerShell 打包脚本，`tauri:build` 显式传入 `--no-bundle`。
 
 ## 常见问题
 
 ### 开发服务器启动失败
 
-检查端口 5173 是否被占用。Vite 配置了 `strictPort: true`。
+检查 `src-tauri/tauri.conf.json` 中 `build.devUrl` 对应的端口（当前为 15573）。Vite 使用 `strictPort: true`，HMR 共用端口。运行 `tauri:dev` 时不要同时启动独立的 `dev`。`EACCES` 也可能来自 Windows 保留端口，可用 `netsh interface ipv4 show excludedportrange protocol=tcp` 查看。
 
 ### Rust 编译错误
 

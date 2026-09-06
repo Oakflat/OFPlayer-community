@@ -1,4 +1,4 @@
-// Generated from the user-supplied grouped SVG. Do not redraw these contours.
+// Inlined from the supplied grouped SVG; these contours are the community source of truth.
 import type { MusicIconPath } from './musicIconPaths'
 
 export const userMusicIconPaths = {
