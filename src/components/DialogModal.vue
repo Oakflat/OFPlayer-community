@@ -269,26 +269,5 @@ function handleCancel() {
   box-shadow: var(--of-glow-danger);
 }
 
-.dialog-enter-active,
-.dialog-leave-active {
-  transition: opacity var(--transition-normal);
-}
-
-.dialog-enter-active .dialog-modal,
-.dialog-leave-active .dialog-modal {
-  transition:
-    opacity var(--transition-normal),
-    transform var(--transition-normal);
-}
-
-.dialog-enter-from,
-.dialog-leave-to {
-  opacity: 0;
-}
-
-.dialog-enter-from .dialog-modal,
-.dialog-leave-to .dialog-modal {
-  opacity: 0;
-  transform: translateY(12px) scale(0.98);
-}
+/* Dialog enter/leave motion is shared in style.css. */
 </style>

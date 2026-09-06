@@ -50,7 +50,6 @@ function handleDocumentClick(event: MouseEvent) {
 
 function updatePosition() {
   if (!props.isOpen || !props.anchorEl) {
-    menuStyle.value = {}
     return
   }
 
@@ -76,6 +75,8 @@ function updatePosition() {
     left: `${left}px`,
     top: `${top}px`,
     maxWidth: `${maxMenuWidth}px`,
+    transformOrigin: `right ${top < anchorRect.top ? 'bottom' : 'top'}`,
+    '--menu-enter-y': top < anchorRect.top ? '4px' : '-4px',
   }
 }
 
@@ -121,7 +122,6 @@ watch(
   () => [props.isOpen, props.anchorEl, props.items.length] as const,
   async ([isOpen]) => {
     if (!isOpen) {
-      menuStyle.value = {}
       return
     }
 
@@ -135,7 +135,7 @@ watch(
 
 <template>
   <Teleport to="body">
-    <Transition name="menu-dropdown">
+    <Transition name="menu-dropdown" @after-leave="menuStyle = {}">
       <div v-if="isOpen" ref="menuRef" class="menu-dropdown" :style="menuStyle" role="menu">
         <button
           v-for="item in items"
@@ -224,15 +224,18 @@ watch(
   cursor: not-allowed;
 }
 
-.menu-dropdown-enter-active,
+.menu-dropdown-enter-active {
+  transition: opacity var(--motion-duration-popover) var(--ease-standard), transform var(--motion-duration-popover) var(--enter-ease);
+}
+
 .menu-dropdown-leave-active {
-  transition: opacity var(--transition-fast), transform var(--transition-fast);
+  transition: opacity var(--motion-duration-dismiss) var(--ease-standard), transform var(--motion-duration-dismiss) var(--ease-emphasized-accelerate);
 }
 
 .menu-dropdown-enter-from,
 .menu-dropdown-leave-to {
   opacity: 0;
-  transform: translateY(-4px) scale(0.98);
+  transform: translateY(var(--menu-enter-y, -4px)) scale(0.98);
 }
 
 html[data-window-surface='native-glass'] .menu-dropdown {

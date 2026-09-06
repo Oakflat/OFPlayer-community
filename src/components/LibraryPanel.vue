@@ -1,5 +1,12 @@
 <script setup lang="ts">
-import { BarChart3, Plus, MoreHorizontal, Cloud, Disc2, Disc3, FolderOpen, HardDriveDownload, Heart, History, Library, ListMusic, Settings2, Users } from 'lucide-vue-next'
+import { BarChart3, Plus, MoreHorizontal } from 'lucide-vue-next'
+import {
+  MusicRemote as Cloud, MusicAlbums as Disc2, MusicQueue as Disc3,
+  MusicImportFolder as FolderOpen, MusicImportAudio as HardDriveDownload,
+  MusicFavorites as Heart, MusicHistory as History, MusicLibrary as Library,
+  MusicAllTracks as ListMusic, MusicSettings as Settings2, MusicArtists as Users,
+  MusicRecentImports,
+} from './icons/MusicIcon'
 import { computed, ref, type Component } from 'vue'
 import { useI18n } from '../composables/useI18n'
 import { parseCollectionRef } from '../models/collection'
@@ -110,7 +117,7 @@ const { t } = useI18n()
 
 const iconByKey: Record<string, Component> = {
   'all-tracks': ListMusic,
-  'recent-imports': HardDriveDownload,
+  'recent-imports': MusicRecentImports,
   'all-plays': History,
   'all-favorites': Heart,
   'current-queue': Disc3,
@@ -529,7 +536,7 @@ function closeDialog() {
               @click="emit('set-active-library', item.key)"
             >
               <component :is="resolveItemIcon(item)" class="sidebar-selector-icon" aria-hidden="true" />
-              <span class="sidebar-selector-name">{{ item.label }}</span>
+              <span class="sidebar-selector-name" :title="item.label">{{ item.label }}</span>
               <strong class="sidebar-selector-count">{{ item.count }}</strong>
             </button>
             <button
@@ -592,7 +599,7 @@ function closeDialog() {
               @click="emit('set-active-collection', item.key)"
             >
               <component :is="resolveItemIcon(item)" class="sidebar-selector-icon" aria-hidden="true" />
-              <span class="sidebar-selector-name">{{ item.label }}</span>
+              <span class="sidebar-selector-name" :title="item.label">{{ item.label }}</span>
               <strong class="sidebar-selector-count">{{ item.count }}</strong>
             </button>
             <button
@@ -633,7 +640,7 @@ function closeDialog() {
             @click="emit('set-active-collection', item.key)"
           >
             <component :is="resolveItemIcon(item)" class="sidebar-selector-icon" aria-hidden="true" />
-            <span class="sidebar-selector-name">{{ item.label }}</span>
+            <span class="sidebar-selector-name" :title="item.label">{{ item.label }}</span>
             <strong class="sidebar-selector-count">{{ item.count }}</strong>
           </button>
         </TransitionGroup>
@@ -841,6 +848,13 @@ function closeDialog() {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: var(--space-2);
+}
+
+/* Match the hand-drawn navigation family at the actual UI size. */
+.sidebar-settings-icon {
+  width: 16px;
+  height: 16px;
+  stroke-width: 1.65;
 }
 
 .sidebar-utility-button {

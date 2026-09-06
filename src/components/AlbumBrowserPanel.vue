@@ -465,7 +465,7 @@ watch(
   inset: 0;
   overflow: hidden;
   /* 整个面板挂载时淡入 + 上移，消除"点进去卡住"感 */
-  animation: album-browser-enter 280ms cubic-bezier(0.2, 0, 0, 1) both;
+  animation: album-browser-enter var(--motion-duration-enter) var(--enter-ease) both;
 }
 
 @keyframes album-browser-enter {
@@ -484,11 +484,11 @@ watch(
 /* 网格层：默认可见（z-index 1），expandedKey 激活时向左退场 */
 .ab-layer--grid {
   z-index: 1;
-  transition: transform 300ms cubic-bezier(0.2, 0, 0, 1), opacity 220ms ease;
+  transition: transform var(--motion-duration-enter) var(--ease-emphasized), opacity var(--duration-md) var(--ease-standard);
   will-change: transform, opacity;
 }
 .ab-layer--grid.is-behind {
-  transform: translateX(-20px);
+  transform: translateX(-12px);
   opacity: 0;
   pointer-events: none;
 }
@@ -496,10 +496,10 @@ watch(
 /* 详情层：默认隐藏在右侧（z-index 2），expandedKey 激活时滑入覆盖网格 */
 .ab-layer--detail {
   z-index: 2;
-  transform: translateX(32px);
+  transform: translateX(20px);
   opacity: 0;
   pointer-events: none;
-  transition: transform 300ms cubic-bezier(0.2, 0, 0, 1), opacity 240ms ease;
+  transition: transform var(--motion-duration-enter) var(--ease-emphasized), opacity var(--duration-md) var(--ease-standard);
   will-change: transform, opacity;
 }
 .ab-layer--detail.is-open {
@@ -542,7 +542,7 @@ watch(
 /* ── 卡片入场：挂载即播放，交错延迟，无需 Observer ── */
 .album-grid .album-card {
   animation: browser-card-enter var(--duration-2xl) var(--ease-emphasized-decelerate) both;
-  animation-delay: calc(var(--card-index, 0) * 22ms);
+  animation-delay: min(calc(var(--card-index, 0) * 16ms), 96ms);
 }
 
 @keyframes browser-card-enter {
@@ -900,7 +900,7 @@ watch(
     background var(--transition-fast),
     transform var(--transition-fast);
   animation: item-enter var(--duration-lg) var(--ease-emphasized-decelerate) both;
-  animation-delay: calc(var(--row-index, 0) * 20ms + 80ms);
+  animation-delay: min(calc(var(--row-index, 0) * 16ms + 40ms), 120ms);
 }
 .detail-track-row:hover {
   background: var(--surface-hover, rgba(0,0,0,0.04));

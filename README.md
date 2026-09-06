@@ -6,6 +6,8 @@ OFPlayer Tauri Community 是 OFPlayer 的桌面社区版本。它保留 Vue + Vi
 
 当前版本为 `26.0.4`，包含新一轮视觉调整和完全在本地生成的聆听统计功能。
 
+主线现已同步 SVG 音乐图标、曲目导航预览、英文布局和动效细调。完整入场与减少动效均可通过本地 UI 预览检查，详细说明见 [界面更新记录](docs/ui-refinement-2026-09-06.md)。
+
 这个仓库面向公开社区维护，移除了私有账号层级、官方更新器、商店打包流程和远程诊断上传，保留可本地构建、可审阅、可二次开发的桌面播放器基线。
 
 ## 致谢
@@ -79,6 +81,10 @@ Tauri 环境准备可参考官方 prerequisites 文档：<https://tauri.app/star
 npm install
 npm run tauri:dev
 ```
+
+桌面开发使用 `http://localhost:15573`；Vite 从 `src-tauri/tauri.conf.json` 的 `build.devUrl` 读取端口，HMR 共用端口。社区版端口与主产品开发端口分开，避免同时调试时冲突。如果出现 `EACCES`，用 `netsh interface ipv4 show excludedportrange protocol=tcp` 检查 Windows 的保留端口。
+
+运行 `npm run dev:ui` 后，打开 `http://localhost:15583/scripts/ui-preview.html` 可切换语言、主题、明暗与动效，检查设置、专辑、沉浸播放器和 Navigation 导航条。此入口使用样例数据，不连接桌面数据库；不执行导入、实际音频播放、更新或删除，也不进入发布构建。图标预览位于 `/scripts/music-icons.html`。完成后用 Ctrl+C 停止预览服务器。
 
 ### 常用命令
 

@@ -467,7 +467,7 @@ const emit = defineEmits<{
   (event: 'download-and-install-update'): void
 }>()
 
-const { t } = useI18n()
+const { locale, t } = useI18n()
 const { scanProgress: injectedScanProgress } = useOFPlayerApp()
 const activeCategory = ref<SettingsCategory>('general')
 const isSortMenuOpen = ref(false)
@@ -928,7 +928,7 @@ const formattedLastScanAt = computed(() => {
     return t('settings.scan.never')
   }
 
-  return new Intl.DateTimeFormat(undefined, {
+  return new Intl.DateTimeFormat(locale.value, {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
@@ -1045,7 +1045,7 @@ function formatDateTime(value: string | number | Date | null | undefined, fallba
     return fallback
   }
 
-  return new Intl.DateTimeFormat(undefined, {
+  return new Intl.DateTimeFormat(locale.value, {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
@@ -1088,7 +1088,7 @@ function formatBytes(bytes: unknown): string {
     unitIndex += 1
   }
 
-  const formatter = new Intl.NumberFormat(undefined, {
+  const formatter = new Intl.NumberFormat(locale.value, {
     maximumFractionDigits: value >= 10 || unitIndex === 0 ? 0 : 1,
   })
 

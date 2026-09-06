@@ -918,7 +918,7 @@ watch(() => props.currentTrack?.id, () => {
   backdrop-filter: blur(12px);
   color: rgba(255, 255, 255, 0.6);
   cursor: pointer;
-  transition: all 0.25s cubic-bezier(0.2, 0, 0, 1);
+  transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), transform var(--duration-md) var(--ease-emphasized);
 }
 
 .immersive-root--windowed .immersive-top-actions {
@@ -1032,22 +1032,22 @@ watch(() => props.currentTrack?.id, () => {
 }
 
 .track-art-leave-active {
-  transition: opacity 0.18s ease, transform 0.18s ease, filter 0.18s ease;
+  transition: opacity var(--motion-duration-exit) var(--ease-standard), transform var(--motion-duration-exit) var(--ease-emphasized-accelerate), filter var(--motion-duration-exit) var(--ease-standard);
 }
 
 .track-art-leave-to {
   opacity: 0;
-  transform: scale(0.88);
-  filter: blur(6px);
+  transform: scale(0.97);
+  filter: blur(2px);
 }
 
 .track-art-enter-active {
-  transition: opacity 0.36s cubic-bezier(0.2, 0, 0, 1), transform 0.36s cubic-bezier(0.2, 0, 0, 1);
+  transition: opacity var(--motion-duration-enter) var(--ease-standard), transform var(--motion-duration-enter) var(--enter-ease);
 }
 
 .track-art-enter-from {
   opacity: 0;
-  transform: scale(0.92);
+  transform: scale(0.97);
 }
 
 .track-meta-next-leave-active {
@@ -1060,7 +1060,7 @@ watch(() => props.currentTrack?.id, () => {
 }
 
 .track-meta-next-enter-active {
-  transition: opacity 0.28s cubic-bezier(0.2, 0, 0, 1) 0.03s, transform 0.28s cubic-bezier(0.2, 0, 0, 1) 0.03s;
+  transition: opacity 0.28s var(--enter-ease) 0.03s, transform 0.28s var(--enter-ease) 0.03s;
 }
 
 .track-meta-next-enter-from {
@@ -1078,7 +1078,7 @@ watch(() => props.currentTrack?.id, () => {
 }
 
 .track-meta-prev-enter-active {
-  transition: opacity 0.28s cubic-bezier(0.2, 0, 0, 1) 0.03s, transform 0.28s cubic-bezier(0.2, 0, 0, 1) 0.03s;
+  transition: opacity 0.28s var(--enter-ease) 0.03s, transform 0.28s var(--enter-ease) 0.03s;
 }
 
 .track-meta-prev-enter-from {
@@ -1243,9 +1243,9 @@ watch(() => props.currentTrack?.id, () => {
   opacity: 1;
   transform: translateY(0);
   transition:
-    max-height 0.42s cubic-bezier(0.22, 1, 0.36, 1),
+    max-height 0.42s var(--ease-emphasized),
     opacity 0.26s ease,
-    transform 0.42s cubic-bezier(0.22, 1, 0.36, 1);
+    transform 0.42s var(--ease-emphasized);
   will-change: max-height, opacity, transform;
 }
 
@@ -1412,7 +1412,7 @@ watch(() => props.currentTrack?.id, () => {
   border: none;
   border-radius: 50%;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+  transition: background-color var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast), transform var(--duration-md) var(--ease-emphasized);
 }
 
 .immersive-control-btn--secondary {
@@ -1448,7 +1448,7 @@ watch(() => props.currentTrack?.id, () => {
   background: transparent;
   color: rgba(255, 255, 255, 0.45);
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+  transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), transform var(--duration-md) var(--ease-emphasized);
 }
 
 .immersive-mode-btn svg {
@@ -1694,7 +1694,7 @@ watch(() => props.currentTrack?.id, () => {
 
 <style>
 .immersive-enter-active {
-  animation: immersive-enter 0.72s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: immersive-enter var(--motion-duration-immersive) var(--enter-ease) both;
   transform-origin: 50% 48%;
   will-change: opacity, transform;
   backface-visibility: hidden;
@@ -1702,86 +1702,45 @@ watch(() => props.currentTrack?.id, () => {
 
 .immersive-leave-active {
   pointer-events: none;
-  animation: immersive-leave 0.32s cubic-bezier(0.32, 0, 0.67, 0) both;
+  animation: immersive-leave var(--motion-duration-immersive-exit) var(--ease-emphasized-accelerate) both;
   transform-origin: 50% 52%;
   will-change: opacity, transform;
   backface-visibility: hidden;
 }
 
 @keyframes immersive-enter {
-  0% {
-    opacity: 0;
-    transform: translateY(18px) scale(1.018);
-  }
-
-  56% {
-    opacity: 1;
-  }
-
-  100% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+  from { opacity: 0; transform: translateY(12px) scale(1.008); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 @keyframes immersive-leave {
-  0% {
-    opacity: 1;
-    transform: translate3d(0, 0, 0);
-  }
-
-  100% {
-    opacity: 0;
-    transform: translate3d(0, 6px, 0);
-  }
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(6px); }
 }
 
+/* All child motion finishes within the root's lifetime, so Vue never cuts it off. */
 .immersive-enter-active::before {
-  animation: immersive-bg-bloom 0.92s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: immersive-bg-bloom var(--motion-duration-immersive) var(--enter-ease) both;
 }
 
 .immersive-enter-active .immersive-background-canvas {
-  animation: immersive-canvas-in 0.86s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-.immersive-enter-active .immersive-top-actions {
-  animation: fade-in-up 0.46s cubic-bezier(0.16, 1, 0.3, 1) 0.18s both;
+  animation: immersive-canvas-in var(--motion-duration-immersive) var(--enter-ease) both;
 }
 
 .immersive-enter-active .immersive-artwork-frame {
-  animation: artwork-settle 0.78s cubic-bezier(0.16, 1, 0.3, 1) 0.08s both;
+  animation: artwork-settle var(--duration-3xl) var(--enter-ease) 40ms both;
 }
 
 .immersive-enter-active .immersive-artwork-reflection {
-  animation: reflection-in 0.72s cubic-bezier(0.16, 1, 0.3, 1) 0.28s both;
+  animation: reflection-in var(--duration-2xl) var(--enter-ease) 60ms both;
 }
 
-.immersive-enter-active .immersive-title {
-  animation: fade-in-up 0.54s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
-}
-
-.immersive-enter-active .immersive-artist {
-  animation: fade-in-up 0.54s cubic-bezier(0.16, 1, 0.3, 1) 0.25s both;
-}
-
-.immersive-enter-active .immersive-album {
-  animation: fade-in-up 0.54s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both;
-}
-
-.immersive-enter-active .immersive-specs {
-  animation: fade-in-up 0.54s cubic-bezier(0.16, 1, 0.3, 1) 0.35s both;
-}
-
-.immersive-enter-active .immersive-meta-side {
-  animation: fade-in-up 0.54s cubic-bezier(0.16, 1, 0.3, 1) 0.38s both;
-}
-
-.immersive-enter-active .immersive-progress-section {
-  animation: fade-in-up 0.56s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both;
+.immersive-enter-active :is(.immersive-top-actions, .immersive-title, .immersive-artist, .immersive-album, .immersive-specs, .immersive-meta-side, .immersive-progress-section) {
+  animation: fade-in-up var(--motion-duration-enter) var(--enter-ease) 60ms both;
 }
 
 .immersive-enter-active .immersive-footer {
-  animation: slide-up 0.62s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
+  animation: slide-up var(--duration-2xl) var(--enter-ease) 80ms both;
 }
 
 @keyframes fade-in {
@@ -1797,7 +1756,7 @@ watch(() => props.currentTrack?.id, () => {
 @keyframes fade-in-up {
   from {
     opacity: 0;
-    transform: translateY(14px);
+    transform: translateY(8px);
   }
 
   to {
@@ -1845,8 +1804,8 @@ watch(() => props.currentTrack?.id, () => {
 @keyframes artwork-settle {
   0% {
     opacity: 0;
-    transform: translateY(22px) scale(0.9);
-    filter: blur(10px);
+    transform: translateY(10px) scale(0.97);
+    filter: blur(3px);
   }
 
   58% {
@@ -1864,7 +1823,7 @@ watch(() => props.currentTrack?.id, () => {
 @keyframes reflection-in {
   from {
     opacity: 0;
-    transform: translateY(-8px) scaleY(0.88);
+    transform: translateY(-4px) scaleY(0.97);
   }
 
   to {
@@ -1876,7 +1835,7 @@ watch(() => props.currentTrack?.id, () => {
 @keyframes slide-up {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(10px);
   }
 
   to {

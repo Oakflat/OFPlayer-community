@@ -5,7 +5,7 @@
   "identifier": "org.ofplayer.community",
   "build": {
     "beforeDevCommand": "npm run dev",
-    "devUrl": "http://localhost:5173",
+    "devUrl": "http://localhost:15573",
     "beforeBuildCommand": "npm run build",
     "frontendDist": "../dist"
   },

@@ -1,13 +1,14 @@
 import { resolve } from 'node:path'
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
+import tauriConfig from './src-tauri/tauri.conf.json'
 
 const host = process.env.TAURI_DEV_HOST as string | undefined
 const platform = process.env.TAURI_ENV_PLATFORM as string | undefined
 const isTauriDebug = process.env.TAURI_ENV_DEBUG === 'true'
 const buildTarget = platform === 'windows' || !platform ? 'chrome105' : 'safari13'
-const devServerPort = 5173
-const hmrPort = 5174
+// Keep the frontend and desktop shell on the same port.
+const devServerPort = Number(new URL(tauriConfig.build.devUrl).port)
 
 export default defineConfig(() => ({
   plugins: [vue()],
@@ -20,7 +21,7 @@ export default defineConfig(() => ({
       ? {
           protocol: 'ws' as const,
           host,
-          port: hmrPort,
+          port: devServerPort,
         }
       : undefined,
     watch: {

@@ -50,6 +50,8 @@ import MenuDropdown, { type MenuDropdownItem } from './MenuDropdown.vue'
 import DialogModal from './DialogModal.vue'
 import TrackPlaylistDialog from './TrackPlaylistDialog.vue'
 import AlbumBrowserPanel from './AlbumBrowserPanel.vue'
+import TrackNavRail from './TrackNavRail.vue'
+import { NAV_RAIL_MIN_TRACK_COUNT, type NavRailPreviewTrack } from './trackNavRailModel'
 
 const TRACK_QUERY_DEBOUNCE_MS = 70
 const TRACK_QUERY_LOG_THRESHOLD_MS = 20
@@ -1215,6 +1217,72 @@ const visibleArtworkHydrationIds = computed(() => {
     .filter((track) => track?.id && !normalizeArtworkSource(resolveRowTrackArtwork(track).artwork))
     .map((track) => track.id as string)
 })
+
+const navRailScrollContainer = computed(() => songListRef.value)
+
+const showTrackNavRail = computed(() => visibleTrackTotalCount.value > NAV_RAIL_MIN_TRACK_COUNT)
+
+const navRailQueryIdentity = computed(() =>
+  [
+    String(props.queryRevision ?? '0'),
+    props.searchQuery,
+    props.typeFilter,
+    props.sortOption ?? 'recent',
+    resolvedActiveCollectionRef.value ?? '',
+    props.currentLibrary?.id ?? '',
+  ].join('|'),
+)
+
+function toNavRailPreviewTrack(track: PlayerTrack, fallbackId: string): NavRailPreviewTrack {
+  const resolvedTrack = resolveRowTrackArtwork(track)
+
+  return {
+    id: resolvedTrack.id ?? fallbackId,
+    title: resolveTrackTitle(resolvedTrack),
+    artwork: normalizeArtworkSource(resolvedTrack.artwork) || null,
+    monogram: artworkMonogram(resolvedTrack),
+  }
+}
+
+async function loadNavRailGroupTracks(
+  startIndex: number,
+  count: number,
+): Promise<NavRailPreviewTrack[]> {
+  const safeStart = Math.max(0, Math.floor(startIndex))
+  const safeCount = Math.max(1, Math.floor(count))
+  const groupTrackIds = visibleTrackIds.value.slice(safeStart, safeStart + safeCount)
+  const snapshotTracks = groupTrackIds
+    .map((trackId) => trackSnapshotById.value.get(trackId))
+    .filter((track): track is PlayerTrack => Boolean(track))
+
+  if (groupTrackIds.length > 0 && snapshotTracks.length === groupTrackIds.length) {
+    return snapshotTracks.map((track, index) =>
+      toNavRailPreviewTrack(track, String(safeStart + index)),
+    )
+  }
+
+  try {
+    const result = await queryTracks(
+      {
+        searchQuery: props.searchQuery,
+        typeFilter: props.typeFilter,
+        sortOption: props.sortOption ?? 'recent',
+      },
+      {
+        queryRevision: String(props.queryRevision ?? '0'),
+        currentLibraryId: props.currentLibrary?.id ?? '',
+        activeCollectionRef: resolvedActiveCollectionRef.value ?? '',
+        offset: safeStart,
+        limit: safeCount,
+        includeTrackIds: false,
+      },
+    )
+
+    return result.rows.map((track, index) => toNavRailPreviewTrack(track, String(safeStart + index)))
+  } catch {
+    return []
+  }
+}
 
 const totalVirtualTrackHeight = computed(() => visibleTrackTotalCount.value * TRACK_ROW_HEIGHT_PX)
 const virtualTrackOffset = computed(() => visibleTrackWindowOffset.value * TRACK_ROW_HEIGHT_PX)
@@ -3444,6 +3512,15 @@ onBeforeUnmount(() => {
               </div>
             </TransitionGroup>
           </div>
+          <TrackNavRail
+            v-if="showTrackNavRail"
+            :total-count="visibleTrackTotalCount"
+            :scroll-top="songListScrollTop"
+            :scroll-container="navRailScrollContainer"
+            :query-identity="navRailQueryIdentity"
+            :row-height-px="TRACK_ROW_HEIGHT_PX"
+            :load-group-tracks="loadNavRailGroupTracks"
+          />
           </template>
         </section>
       </section>

@@ -588,30 +588,6 @@ impl DesktopStateStore {
         }
     }
 
-    pub fn track_ids_with_artwork(&self) -> Result<HashSet<String>, String> {
-        let connection = self.connection()?;
-        let mut statement = connection
-            .prepare(
-                "SELECT track_id
-                   FROM track_artwork
-                  WHERE COALESCE(artwork_text, '') <> ''
-                     OR COALESCE(artwork_path, '') <> ''",
-            )
-            .map_err(|error| format!("Failed to prepare desktop artwork lookup: {error}"))?;
-        let rows = statement
-            .query_map([], |row| row.get::<_, String>(0))
-            .map_err(|error| format!("Failed to read desktop artwork lookup: {error}"))?;
-        let mut track_ids = HashSet::new();
-        for row in rows {
-            let track_id =
-                row.map_err(|error| format!("Failed to read desktop artwork track id: {error}"))?;
-            if !track_id.trim().is_empty() {
-                track_ids.insert(track_id);
-            }
-        }
-        Ok(track_ids)
-    }
-
     pub fn put_tracks(&self, records: &[Value]) -> Result<(), String> {
         self.persist_tracks(records)?;
         self.mark_catalog_structure_changed()?;
@@ -2368,8 +2344,7 @@ fn estimate_listening_segment_seconds(
 
     listen_seconds
         .min(wall_seconds)
-        .min(MAX_LISTENING_SEGMENT_SECONDS)
-        .max(0.0)
+        .clamp(0.0, MAX_LISTENING_SEGMENT_SECONDS)
 }
 
 fn close_listening_segment(

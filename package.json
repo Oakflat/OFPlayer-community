@@ -16,7 +16,9 @@
     "tauri:dev": "node --experimental-strip-types ./scripts/run-tauri.ts dev",
     "tauri:build": "node --experimental-strip-types ./scripts/run-tauri.ts build",
     "tauri:build:all": "node --experimental-strip-types ./scripts/run-tauri.ts build --bundles nsis msi",
-    "tauri:build:msi": "node --experimental-strip-types ./scripts/run-tauri.ts build --bundles msi"
+    "tauri:build:msi": "node --experimental-strip-types ./scripts/run-tauri.ts build --bundles msi",
+    "dev:ui": "vite --port 15583",
+    "icons:export": "node --experimental-strip-types scripts/export-music-icons.ts"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.11.1",

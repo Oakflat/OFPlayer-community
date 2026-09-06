@@ -2,14 +2,15 @@
    全局设计令牌 - 主题无关的基础变量
    ======================================== */
 :root {
-  /* 动效系统 (Motion System) - 缓动曲线 */
-  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
-  --ease-emphasized: cubic-bezier(0.3, 0, 0, 1);
-  --ease-emphasized-accelerate: cubic-bezier(0.3, 0, 0.8, 0.15);
-  --ease-emphasized-decelerate: cubic-bezier(0.05, 0.7, 0.1, 1);
-  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
-  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
-  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  /* Apple-inspired pacing: gentle feedback, decisive movement, no overshoot.
+     These are OFPlayer curves, not platform spring presets. */
+  --ease-standard: cubic-bezier(0.25, 0.1, 0.25, 1);
+  --ease-emphasized: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-emphasized-accelerate: cubic-bezier(0.4, 0, 1, 1);
+  --ease-emphasized-decelerate: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-out-expo: var(--ease-emphasized-decelerate);
+  --ease-out-quart: var(--ease-emphasized-decelerate);
+  --ease-spring: var(--ease-emphasized);
 
   /* 字体系统 - CJK-capable UI font first to keep mixed Chinese/Latin text unified. */
   --font-family: "Microsoft YaHei UI", "Microsoft YaHei", "PingFang SC", "Noto Sans CJK SC", "Noto Sans SC", sans-serif;
@@ -54,12 +55,19 @@
 
   /* 动效时长 (Duration Scale) */
   --duration-xs: 100ms;
-  --duration-sm: 150ms;
+  --duration-sm: 140ms;
   --duration-md: 200ms;
-  --duration-lg: 250ms;
+  --duration-lg: 240ms;
   --duration-xl: 300ms;
-  --duration-2xl: 400ms;
-  --duration-3xl: 500ms;
+  --duration-2xl: 380ms;
+  --duration-3xl: 460ms;
+
+  --motion-duration-enter: 320ms;
+  --motion-duration-exit: 180ms;
+  --motion-duration-popover: 220ms;
+  --motion-duration-dismiss: 140ms;
+  --motion-duration-immersive: 520ms;
+  --motion-duration-immersive-exit: 260ms;
 
   /* 过渡 (Transitions) */
   --transition-fast: var(--duration-sm) var(--ease-standard);
@@ -73,9 +81,9 @@
   --scrollbar-thumb-active-inset: 2px;
 
   /* 入场动画参数 */
-  --enter-duration: var(--duration-2xl);
+  --enter-duration: var(--motion-duration-enter);
   --enter-ease: var(--ease-emphasized-decelerate);
-  --enter-delay-base: 60ms;
+  --enter-delay-base: 24ms;
 
   /* 默认字体设置 */
   font-family: var(--font-family);
@@ -392,6 +400,7 @@ textarea {
 
 button:active:not(:disabled) {
   transform: scale(0.98);
+  transition-duration: var(--duration-xs);
 }
 
 /* 优化占位符文本 */
@@ -1028,16 +1037,6 @@ html[data-effective-color-scheme="dark"][data-window-surface='native-glass'] .si
   animation: eyebrow-enter var(--duration-lg) var(--ease-emphasized-decelerate) backwards;
 }
 
-/* 左侧导航头部的 eyebrow 延迟 */
-.sidebar-nav-head .eyebrow {
-  animation-delay: 300ms;
-}
-
-/* 右侧内容区域的 eyebrow 延迟 */
-.content-header .eyebrow {
-  animation-delay: 320ms;
-}
-
 .sidebar-top h1,
 .content-title {
   margin: 0;
@@ -1051,7 +1050,6 @@ html[data-effective-color-scheme="dark"][data-window-surface='native-glass'] .si
   line-height: var(--line-height-tight);
   /* 独立入场动画 */
   animation: title-enter var(--duration-xl) var(--ease-emphasized-decelerate) backwards;
-  animation-delay: 340ms;
 }
 
 .sidebar-nav-head {
@@ -1071,7 +1069,6 @@ html[data-effective-color-scheme="dark"][data-window-surface='native-glass'] .si
   letter-spacing: var(--letter-spacing-tight);
   color: var(--ink);
   animation: title-enter var(--duration-xl) var(--ease-emphasized-decelerate) backwards;
-  animation-delay: 340ms;
 }
 
 .sidebar-copy,
@@ -1291,25 +1288,7 @@ html[data-effective-color-scheme="dark"][data-window-surface='native-glass'] .si
   color: var(--ink-muted);
   flex: 0 0 auto;
   transition: transform var(--transition-normal), color var(--transition-normal);
-  /* 入场动画：图标旋转进入 */
-  animation: icon-spin-in var(--duration-lg) var(--ease-emphasized-decelerate) backwards;
 }
-
-/* 为不同面板的图标添加不同的入场延迟 */
-.sidebar-selector-panel:nth-child(1) .sidebar-selector-item:nth-child(1) .sidebar-selector-icon { animation-delay: 430ms; }
-.sidebar-selector-panel:nth-child(1) .sidebar-selector-item:nth-child(2) .sidebar-selector-icon { animation-delay: 470ms; }
-.sidebar-selector-panel:nth-child(1) .sidebar-selector-item:nth-child(3) .sidebar-selector-icon { animation-delay: 510ms; }
-.sidebar-selector-panel:nth-child(1) .sidebar-selector-item:nth-child(4) .sidebar-selector-icon { animation-delay: 550ms; }
-
-.sidebar-selector-panel:nth-child(2) .sidebar-selector-item:nth-child(1) .sidebar-selector-icon { animation-delay: 510ms; }
-.sidebar-selector-panel:nth-child(2) .sidebar-selector-item:nth-child(2) .sidebar-selector-icon { animation-delay: 550ms; }
-.sidebar-selector-panel:nth-child(2) .sidebar-selector-item:nth-child(3) .sidebar-selector-icon { animation-delay: 590ms; }
-.sidebar-selector-panel:nth-child(2) .sidebar-selector-item:nth-child(4) .sidebar-selector-icon { animation-delay: 630ms; }
-
-.sidebar-selector-panel:nth-child(3) .sidebar-selector-item:nth-child(1) .sidebar-selector-icon { animation-delay: 590ms; }
-.sidebar-selector-panel:nth-child(3) .sidebar-selector-item:nth-child(2) .sidebar-selector-icon { animation-delay: 630ms; }
-.sidebar-selector-panel:nth-child(3) .sidebar-selector-item:nth-child(3) .sidebar-selector-icon { animation-delay: 670ms; }
-.sidebar-selector-panel:nth-child(3) .sidebar-selector-item:nth-child(4) .sidebar-selector-icon { animation-delay: 710ms; }
 
 .sidebar-selector-item:hover .sidebar-selector-icon {
   transform: none;
@@ -1321,12 +1300,19 @@ html[data-effective-color-scheme="dark"][data-window-surface='native-glass'] .si
 }
 
 .sidebar-selector-name {
+  min-width: 0;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-semibold);
   color: var(--ink);
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: normal;
   transition: transform var(--transition-fast);
 }
 
@@ -1638,6 +1624,7 @@ html[data-effective-color-scheme="dark"][data-window-surface='native-glass'] .si
   z-index: 5;
   isolation: isolate;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-4);
@@ -2172,8 +2159,8 @@ html[data-effective-color-scheme="dark"][data-window-surface='native-glass'] .si
   gap: 0;
   width: var(--sidebar-content-width);
   margin-inline: auto;
-  padding: 0.5rem;
-  scrollbar-gutter: stable both-edges;
+  padding: 0.5rem 0.25rem;
+  scrollbar-gutter: stable;
   border-radius: var(--radius-lg);
   border: 1px solid var(--line-soft);
   background: var(--surface-elevated);
@@ -2405,9 +2392,12 @@ html:lang(zh) .sidebar-overview-body {
   *,
   *::before,
   *::after {
+    animation-delay: 0ms !important;
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
+    transition-delay: 0ms !important;
     transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
   
   .playback-artwork::before {
@@ -3437,128 +3427,45 @@ html[data-immersive-transition='closing'] .transport-button-mode {
 
 }
 
-/* ==================== 入场动画系统 (Orchestrated Entrance) ==================== */
-
-/* 第一层：页面背景 - 最快淡入建立空间 */
+/* ==================== Coordinated entrance ==================== */
+/* Reveal the workspace together; only the content and dock trail by 60–80ms. */
 .page-shell {
-  animation: fade-in 240ms var(--ease-standard) backwards;
+  animation: fade-in var(--duration-md) var(--ease-standard) backwards;
 }
 
-/* 第二层：播放器主壳体 - 缩放淡入建立焦点 */
 .player-shell {
-  animation: scale-in-soft var(--duration-3xl) var(--ease-emphasized-decelerate) backwards;
-  animation-delay: 80ms;
+  animation: scale-in-soft var(--motion-duration-enter) var(--enter-ease) backwards;
 }
 
-/* 第三层：左侧面板框架 - 从左侧滑入 */
-.panel-sidebar {
-  animation: slide-in-left var(--duration-3xl) var(--ease-emphasized-decelerate) backwards;
-  animation-delay: 160ms;
-}
-
-/* 第四层：右侧面板框架 - 从右侧滑入 */
+.panel-sidebar,
 .panel-player {
-  animation: slide-in-right var(--duration-3xl) var(--ease-emphasized-decelerate) backwards;
-  animation-delay: 160ms;
+  animation: fade-in var(--duration-lg) var(--ease-standard) 40ms backwards;
 }
 
-/* ========== 左侧导航层级编排 (左侧瀑布流) ========== */
-
-/* 导航头部 - 最先出场 */
-.sidebar-nav-head {
-  animation: slide-up-fade var(--duration-xl) var(--ease-emphasized-decelerate) backwards;
-  animation-delay: 280ms;
-}
-
-/* 导航栈容器 - 建立层次 */
-.sidebar-nav-stack {
-  animation: fade-in var(--duration-lg) var(--ease-standard) backwards;
-  animation-delay: 320ms;
-}
-
-/* 左侧分组面板 - 统一容器内的分组 */
-.sidebar-selector-panel {
-  animation: fade-in var(--duration-lg) var(--ease-standard) backwards;
-}
-
-/* 左侧分组标题 - 带缩放的渐入 */
-.sidebar-group-label {
-  animation: label-enter var(--duration-lg) var(--ease-emphasized-decelerate) backwards;
-}
-
-/* 为每个面板的标题添加独立延迟 */
-.sidebar-selector-panel:nth-child(1) .sidebar-group-label {
-  animation-delay: 400ms;
-}
-
-.sidebar-selector-panel:nth-child(2) .sidebar-group-label {
-  animation-delay: 480ms;
-}
-
-.sidebar-selector-panel:nth-child(3) .sidebar-group-label {
-  animation-delay: 560ms;
-}
-
-/* 左侧按钮组 - 交错进入 */
-.sidebar-actions {
-  animation: slide-up-fade var(--duration-xl) var(--ease-emphasized-decelerate) backwards;
-  animation-delay: 620ms;
-}
-
-.sidebar-action {
-  animation: item-enter var(--duration-lg) var(--ease-emphasized-decelerate) backwards;
-  animation-delay: 680ms;
-}
-
-.sidebar-settings {
-  animation: item-enter var(--duration-lg) var(--ease-emphasized-decelerate) backwards;
-  animation-delay: 740ms;
-}
-
-/* ========== 右侧内容层级编排 ========== */
-
-/* 内容头部 - 渐入 */
-.content-header {
-  animation: slide-up-fade var(--duration-xl) var(--ease-emphasized-decelerate) backwards;
-  animation-delay: 300ms;
-}
-
-/* 轻量工具条 - 渐入 */
+.sidebar-nav-head,
+.sidebar-nav-stack,
+.content-header,
 .library-toolbar {
-  animation: fade-in var(--duration-lg) var(--ease-standard) backwards;
-  animation-delay: 380ms;
+  animation: fade-in var(--duration-md) var(--ease-standard) 60ms backwards;
 }
 
-/* 曲目列表区域 - 大区块渐入 */
-.track-region {
-  animation: slide-up-fade-soft var(--duration-3xl) var(--ease-emphasized-decelerate) backwards;
-  animation-delay: 460ms;
-}
-
-/* ========== 列表项动态编排 (TransitionGroup) ========== */
-
-/* 左侧列表项交错动画 - 基础样式 */
+/* Child icons and labels travel with their parent, avoiding stacked transforms. */
+.sidebar-nav-head :is(.eyebrow, h1),
+.sidebar-top h1,
+.content-header :is(.eyebrow, .content-title),
+.sidebar-selector-panel,
+.sidebar-group-label,
 .sidebar-selector-item {
-  animation: item-enter var(--duration-md) var(--ease-emphasized-decelerate) backwards;
+  animation: none;
 }
 
-/* 第一个面板内的列表项延迟 */
-.sidebar-selector-panel:nth-child(1) .sidebar-selector-item:nth-child(1) { animation-delay: 410ms; }
-.sidebar-selector-panel:nth-child(1) .sidebar-selector-item:nth-child(2) { animation-delay: 450ms; }
-.sidebar-selector-panel:nth-child(1) .sidebar-selector-item:nth-child(3) { animation-delay: 490ms; }
-.sidebar-selector-panel:nth-child(1) .sidebar-selector-item:nth-child(4) { animation-delay: 530ms; }
+.sidebar-actions {
+  animation: slide-up-fade-soft var(--motion-duration-enter) var(--enter-ease) 80ms backwards;
+}
 
-/* 第二个面板内的列表项延迟 */
-.sidebar-selector-panel:nth-child(2) .sidebar-selector-item:nth-child(1) { animation-delay: 490ms; }
-.sidebar-selector-panel:nth-child(2) .sidebar-selector-item:nth-child(2) { animation-delay: 530ms; }
-.sidebar-selector-panel:nth-child(2) .sidebar-selector-item:nth-child(3) { animation-delay: 570ms; }
-.sidebar-selector-panel:nth-child(2) .sidebar-selector-item:nth-child(4) { animation-delay: 610ms; }
-
-/* 第三个面板内的列表项延迟 */
-.sidebar-selector-panel:nth-child(3) .sidebar-selector-item:nth-child(1) { animation-delay: 570ms; }
-.sidebar-selector-panel:nth-child(3) .sidebar-selector-item:nth-child(2) { animation-delay: 610ms; }
-.sidebar-selector-panel:nth-child(3) .sidebar-selector-item:nth-child(3) { animation-delay: 650ms; }
-.sidebar-selector-panel:nth-child(3) .sidebar-selector-item:nth-child(4) { animation-delay: 690ms; }
+.track-region {
+  animation: slide-up-fade-soft var(--motion-duration-enter) var(--enter-ease) 60ms backwards;
+}
 
 /* 列表过滤与排序动画 */
 .list-move,
@@ -3571,23 +3478,22 @@ html[data-immersive-transition='closing'] .transport-button-mode {
 
 .list-enter-from {
   opacity: 0;
-  transform: translateY(12px) scale(0.96);
+  transform: translateY(6px) scale(0.99);
 }
 
 .list-leave-to {
   opacity: 0;
-  transform: translateX(-16px) scale(0.98);
+  transform: translateX(-8px) scale(0.99);
 }
 
 .list-leave-active {
   position: absolute;
 }
 
-/* ========== 底部控制栏 - 压轴出场 ========== */
+/* Playback controls arrive with the workspace. */
 
 .playback-dock {
-  animation: dock-enter var(--duration-3xl) var(--ease-emphasized-decelerate) backwards;
-  animation-delay: 580ms;
+  animation: dock-enter var(--motion-duration-enter) var(--enter-ease) 80ms backwards;
 }
 
 /* ==================== Keyframes 定义 ==================== */
@@ -3615,7 +3521,7 @@ html[data-immersive-transition='closing'] .transport-button-mode {
 @keyframes slide-in-left {
   from {
     opacity: 0;
-    transform: translateX(-24px);
+    transform: translateX(-12px);
   }
   to {
     opacity: 1;
@@ -3626,7 +3532,7 @@ html[data-immersive-transition='closing'] .transport-button-mode {
 @keyframes slide-in-right {
   from {
     opacity: 0;
-    transform: translateX(24px);
+    transform: translateX(12px);
   }
   to {
     opacity: 1;
@@ -3637,7 +3543,7 @@ html[data-immersive-transition='closing'] .transport-button-mode {
 @keyframes slide-in-up {
   from {
     opacity: 0;
-    transform: translateY(16px);
+    transform: translateY(8px);
   }
   to {
     opacity: 1;
@@ -3650,7 +3556,7 @@ html[data-immersive-transition='closing'] .transport-button-mode {
 @keyframes scale-in-soft {
   from {
     opacity: 0;
-    transform: scale(0.96);
+    transform: scale(0.985);
   }
   to {
     opacity: 1;
@@ -3661,7 +3567,7 @@ html[data-immersive-transition='closing'] .transport-button-mode {
 @keyframes slide-up-fade {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(10px);
   }
   to {
     opacity: 1;
@@ -3672,7 +3578,7 @@ html[data-immersive-transition='closing'] .transport-button-mode {
 @keyframes slide-up-fade-soft {
   from {
     opacity: 0;
-    transform: translateY(16px);
+    transform: translateY(8px);
   }
   to {
     opacity: 1;
@@ -3716,7 +3622,7 @@ html[data-immersive-transition='closing'] .transport-button-mode {
 @keyframes dock-enter {
   from {
     opacity: 0;
-    transform: translateY(24px) scale(0.98);
+    transform: translateY(10px) scale(0.99);
   }
   to {
     opacity: 1;
@@ -3769,17 +3675,6 @@ html[data-immersive-transition='closing'] .transport-button-mode {
   }
 }
 
-@keyframes icon-spin-in {
-  from {
-    opacity: 0;
-    transform: rotate(-180deg) scale(0.5);
-  }
-  to {
-    opacity: 1;
-    transform: rotate(0deg) scale(1);
-  }
-}
-
 @keyframes spin {
   to {
     transform: rotate(360deg);
@@ -3790,7 +3685,6 @@ html[data-immersive-transition='closing'] .transport-button-mode {
   from {
     opacity: 0;
     transform: translateY(-8px);
-    letter-spacing: 0.2em;
   }
   to {
     opacity: 1;
@@ -3861,7 +3755,7 @@ html[data-effective-color-scheme="dark"][data-window-surface='native-glass'] .se
 .settings-modal {
   position: relative;
   z-index: 1;
-  width: min(860px, calc(100vw - 48px));
+  width: min(960px, calc(100vw - 48px));
   height: min(640px, calc(100dvh - 48px));
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
@@ -3915,19 +3809,26 @@ html[data-effective-color-scheme="dark"][data-window-surface='native-glass'] .se
 .settings-modal-body {
   min-height: 0;
   display: grid;
-  grid-template-columns: 204px minmax(0, 1fr);
+  grid-template-columns: 228px minmax(0, 1fr);
 }
 
 .settings-modal-nav {
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-  padding: 1.25rem;
+  padding: 1rem;
   background: var(--surface-modal-soft);
   border-right: 1px solid var(--line-soft);
 }
 
 .settings-nav-item {
+  flex: 0 0 auto;
+  min-width: 0;
+  overflow-wrap: anywhere;
   display: flex;
   flex-direction: column;
   gap: 0.1875rem;
@@ -3990,12 +3891,14 @@ html[data-effective-color-scheme="dark"][data-window-surface='native-glass'] .se
 }
 
 .settings-nav-storage-head svg {
+  flex: 0 0 auto;
   width: 16px;
   height: 16px;
   color: var(--color-playing);
 }
 
 .settings-modal-content {
+  min-width: 0;
   min-height: 0;
   overflow-x: hidden;
   overflow-y: auto;
@@ -4035,6 +3938,7 @@ html[data-effective-color-scheme="dark"][data-window-surface='native-glass'] .se
 }
 
 .settings-panel-card {
+  min-width: 0;
   position: relative;
   z-index: 0;
   display: grid;
@@ -4050,6 +3954,8 @@ html[data-effective-color-scheme="dark"][data-window-surface='native-glass'] .se
 }
 
 .settings-panel-copy {
+  min-width: 0;
+  overflow-wrap: anywhere;
   display: flex;
   flex-direction: column;
   gap: 0.375rem;
@@ -4078,6 +3984,8 @@ html[data-effective-color-scheme="dark"][data-window-surface='native-glass'] .se
 }
 
 .settings-choice {
+  min-width: 0;
+  overflow-wrap: anywhere;
   position: relative;
   display: flex;
   flex-direction: column;
@@ -4124,6 +4032,7 @@ html[data-effective-color-scheme="dark"][data-window-surface='native-glass'] .se
 }
 
 .settings-choice-icon {
+  flex: 0 0 auto;
   color: var(--ink-muted);
 }
 
@@ -4290,7 +4199,7 @@ html[data-effective-color-scheme="dark"][data-window-surface='native-glass'] .se
 .settings-select-menu {
   position: relative;
   z-index: 1;
-  width: min(100%, 240px);
+  width: min(100%, 320px);
 }
 
 .settings-select {
@@ -4299,7 +4208,7 @@ html[data-effective-color-scheme="dark"][data-window-surface='native-glass'] .se
   gap: var(--space-3);
   min-height: 46px;
   width: 100%;
-  max-width: 240px;
+  max-width: 320px;
   padding: 0 var(--space-4);
   border-radius: var(--radius-full);
   border: 1px solid var(--line);
@@ -5034,20 +4943,24 @@ html[data-effective-color-scheme="dark"][data-window-surface='native-glass'] .se
 }
 
 /* Shared modal motion for dialog-style Teleports that do not own scoped transition classes. */
-.dialog-enter-active:is(.dialog-backdrop, .external-dialog-backdrop, .close-choice-backdrop),
+.dialog-enter-active:is(.dialog-backdrop, .external-dialog-backdrop, .close-choice-backdrop) {
+  /* Vue measures the root: keep it alive until the inner transform finishes. */
+  transition: opacity var(--motion-duration-enter) var(--ease-standard);
+}
+
 .dialog-leave-active:is(.dialog-backdrop, .external-dialog-backdrop, .close-choice-backdrop) {
-  transition: opacity var(--duration-md) var(--ease-standard);
+  transition: opacity var(--motion-duration-exit) var(--ease-standard);
 }
 
 .dialog-enter-active :is(.dialog-modal, .external-dialog, .close-choice-dialog) {
   transition:
-    transform var(--duration-xl) var(--ease-emphasized-decelerate),
+    transform var(--motion-duration-enter) var(--enter-ease),
     opacity var(--duration-md) var(--ease-standard);
 }
 
 .dialog-leave-active :is(.dialog-modal, .external-dialog, .close-choice-dialog) {
   transition:
-    transform var(--duration-md) var(--ease-emphasized-accelerate),
+    transform var(--motion-duration-exit) var(--ease-emphasized-accelerate),
     opacity var(--duration-sm) var(--ease-standard);
 }
 
@@ -5058,26 +4971,26 @@ html[data-effective-color-scheme="dark"][data-window-surface='native-glass'] .se
 
 .dialog-enter-from :is(.dialog-modal, .external-dialog, .close-choice-dialog) {
   opacity: 0;
-  transform: translateY(16px) scale(0.96);
+  transform: translateY(10px) scale(0.985);
 }
 
 .dialog-leave-to :is(.dialog-modal, .external-dialog, .close-choice-dialog) {
   opacity: 0;
-  transform: translateY(8px) scale(0.98);
+  transform: translateY(6px) scale(0.99);
 }
 
 .settings-modal-enter-active {
-  transition: opacity var(--duration-md) var(--ease-standard);
+  transition: opacity var(--motion-duration-enter) var(--ease-standard);
 }
 .settings-modal-leave-active {
-  transition: opacity var(--duration-sm) var(--ease-standard);
+  transition: opacity var(--motion-duration-exit) var(--ease-standard);
 }
 
 .settings-modal-enter-active .settings-modal {
-  transition: transform var(--duration-xl) var(--ease-emphasized-decelerate), opacity var(--duration-md) var(--ease-standard);
+  transition: transform var(--motion-duration-enter) var(--enter-ease), opacity var(--duration-md) var(--ease-standard);
 }
 .settings-modal-leave-active .settings-modal {
-  transition: transform var(--duration-md) var(--ease-emphasized-accelerate), opacity var(--duration-sm) var(--ease-standard);
+  transition: transform var(--motion-duration-exit) var(--ease-emphasized-accelerate), opacity var(--duration-sm) var(--ease-standard);
 }
 
 .settings-modal-enter-from,
@@ -5087,19 +5000,21 @@ html[data-effective-color-scheme="dark"][data-window-surface='native-glass'] .se
 
 .settings-modal-enter-from .settings-modal {
   opacity: 0;
-  transform: translateY(16px) scale(0.96);
+  transform: translateY(10px) scale(0.985);
 }
 
 .settings-modal-leave-to .settings-modal {
   opacity: 0;
-  transform: translateY(8px) scale(0.98);
+  transform: translateY(6px) scale(0.99);
 }
 
 html[data-motion='reduced'] *,
 html[data-motion='reduced'] *::before,
 html[data-motion='reduced'] *::after {
+  animation-delay: 0ms !important;
   animation-duration: 0.01ms !important;
   animation-iteration-count: 1 !important;
+  transition-delay: 0ms !important;
   transition-duration: 0.01ms !important;
   scroll-behavior: auto !important;
 }
