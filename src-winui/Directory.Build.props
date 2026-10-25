@@ -1,0 +1,8 @@
+<Project>
+  <PropertyGroup>
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+    <CommunityBuildRoot Condition="'$(CommunityBuildRoot)' == ''">$(MSBuildThisFileDirectory)..\.artifacts</CommunityBuildRoot>
+    <BaseOutputPath>$(CommunityBuildRoot)\dotnet\$(MSBuildProjectName)\bin\</BaseOutputPath>
+    <BaseIntermediateOutputPath>$(CommunityBuildRoot)\dotnet\$(MSBuildProjectName)\obj\</BaseIntermediateOutputPath>
+  </PropertyGroup>
+</Project>

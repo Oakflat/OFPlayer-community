@@ -1,0 +1,13 @@
+[package]
+name = "ofplayer-community-host"
+version = "0.0.0"
+edition = "2021"
+license = "Apache-2.0"
+publish = false
+
+[dependencies]
+ofplayer-community-core = { path = "../community-core" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+uuid = { version = "1", features = ["v4"] }
+chrono = { version = "0.4", default-features = false, features = ["clock"] }

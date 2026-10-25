@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
+    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+    <SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <NativeSourceInput Include="Native\**\*.h;Native\**\*.cpp;Native\compile.ps1" />
+    <Content Include="$(IntermediateOutputPath)native\OFPlayer.Video.MediaSource.dll" Link="OFPlayer.Video.MediaSource.dll" TargetPath="OFPlayer.Video.MediaSource.dll" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+  <Target Name="BuildContinuousVideoSource" BeforeTargets="PrepareForBuild"
+          Inputs="@(NativeSourceInput)"
+          Outputs="$(IntermediateOutputPath)native\OFPlayer.Video.MediaSource.dll">
+    <Exec Command="powershell.exe -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\Native\compile.ps1&quot; -OutputDirectory &quot;$(IntermediateOutputPath)native&quot;" />
+  </Target>
+</Project>

@@ -1,27 +1,21 @@
-node_modules/
-dist/
+.artifacts/
+target/
+**/bin/
+**/obj/
 .idea/
 .vscode/
-src-tauri/target/
-src-tauri/gen/
-
 *.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
 **/*.rs.bk
-
 .DS_Store
 Thumbs.db
-.sisyphus/
+__pycache__/
+*.pyc
 
-# Private packaging and design-authoring assets are not community source inputs.
-src-tauri/installer/
-src-tauri/icons/Square*Logo.png
-src-tauri/icons/StoreLogo.png
-src/assets/music-icons/
-scripts/*.ps1
-scripts/export-music-icons.ts
-scripts/music-icons.html
-scripts/ui-preview.*
+# Local packaging, credentials and development-only material stay outside source.
+.packaging/
+.private/
+*.pfx
+*.p12
+*.key
+.env
+.env.*

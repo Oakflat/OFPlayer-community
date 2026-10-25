@@ -1,26 +1,8 @@
-# OFPlayer Tauri Community License
+# OFPlayer Community License
 
-OFPlayer Tauri Community uses a dual-license structure.
+- `src-winui/` (except third-party sources), `tests/`, `docs/`, assets, and build configuration: MIT. See [LICENSE-MIT](LICENSE-MIT).
+- `crates/`: Apache License 2.0. See [LICENSE-APACHE](LICENSE-APACHE).
+- `src-winui/OFPlayer.WindowsMedia/Native/ThirdParty/`: the licenses in the adjacent `*-LICENSE.txt` files apply.
+- External Rust, .NET, Windows App SDK and other platform dependencies retain their respective licenses.
 
-## MIT License
-
-The following parts are licensed under the MIT License:
-
-- `src/`
-- `public/`
-- `docs/`
-- frontend build scripts and configuration files
-
-See [LICENSE-MIT](LICENSE-MIT) for the full MIT License text.
-
-## Apache License 2.0
-
-The following parts are licensed under the Apache License 2.0:
-
-- `src-tauri/`
-
-See [src-tauri/LICENSE](src-tauri/LICENSE) for the full Apache License 2.0 text.
-
-## Contributions
-
-By contributing to this repository, you agree that your contributions are licensed under the same license as the files or modules you modify.
+The historical Tauri tree remains available in Git history with its original license files. Contributions use the license of the component being changed.

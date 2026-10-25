@@ -1,54 +1,49 @@
-name: CI
+name: Community Windows
 
 on:
   pull_request:
   push:
-    branches:
-      - main
-      - dev
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: pwsh
+
+env:
+  CARGO_TARGET_DIR: ${{ github.workspace }}/.artifacts/native
 
 jobs:
-  quality:
-    name: Quality gates
+  build:
     runs-on: windows-latest
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
         with:
-          node-version: 22
-          cache: npm
-
-      - name: Setup pinned Rust toolchain
+          global-json-file: global.json
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install pinned Rust toolchain
         run: rustup show
-
-      - name: Install frontend dependencies
-        run: npm ci
-
-      - name: Check Tauri command chain
-        run: npm run check:tauri-commands
-
-      - name: Run frontend unit tests
-        run: npm test
-
-      - name: Build frontend
-        run: npm run build
-
+      - name: Check dependency boundaries
+        run: python tests/community_boundary.py
       - name: Rust format
-        working-directory: src-tauri
         run: cargo fmt --all -- --check
-
-      - name: Rust check
-        working-directory: src-tauri
-        run: cargo check --locked
-
-      - name: Rust test
-        working-directory: src-tauri
-        run: cargo test --locked
-
-      - name: Rust clippy
-        working-directory: src-tauri
-        run: cargo clippy --locked --all-targets -- -D warnings
+      - name: Rust lint
+        run: cargo clippy --workspace --all-targets --locked -- -D warnings
+      - name: Rust unit tests
+        env:
+          LOCALAPPDATA: ${{ runner.temp }}/ofplayer-community-tests
+        run: cargo test --workspace --locked
+      - name: Build native host
+        run: cargo build --workspace --release --locked
+      - name: Build WinUI
+        run: dotnet build src-winui/OFPlayer.Community -c Release -p:Platform=x64 -p:RestoreLockedMode=true
+      - name: Native host contract
+        run: python tests/host_contract.py --host .artifacts/native/release/ofplayer-community-host.exe
+      - name: Managed tests
+        run: dotnet run --project src-winui/OFPlayer.Community.Tests -c Release -p:RestoreLockedMode=true

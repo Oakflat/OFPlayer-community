@@ -1,0 +1,13 @@
+<Application x:Class="OFPlayer.Community.App"
+ xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+ <Application.Resources>
+  <ResourceDictionary>
+   <ResourceDictionary.MergedDictionaries><XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls"/></ResourceDictionary.MergedDictionaries>
+   <ResourceDictionary.ThemeDictionaries>
+    <ResourceDictionary x:Key="Default"><SolidColorBrush x:Key="CommunitySurface" Color="#202020"/><SolidColorBrush x:Key="CommunityChrome" Color="#0FFFFFFF"/></ResourceDictionary>
+    <ResourceDictionary x:Key="Light"><SolidColorBrush x:Key="CommunitySurface" Color="#FAFAFA"/><SolidColorBrush x:Key="CommunityChrome" Color="#66FFFFFF"/></ResourceDictionary>
+   </ResourceDictionary.ThemeDictionaries>
+  </ResourceDictionary>
+ </Application.Resources>
+</Application>
