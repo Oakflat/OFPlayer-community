@@ -138,6 +138,7 @@ impl DesktopStateStore {
         let database_path = data_dir.join(DATABASE_FILE_NAME);
         let connection = open_connection(&database_path)?;
         initialize_schema(&connection)?;
+        crate::catalog_browse::initialize(&connection)?;
         clear_legacy_catalog_snapshot_cache(&connection)?;
         self.database_path = Some(database_path);
         self.catalog_consistency_checked.set(false);
@@ -194,7 +195,7 @@ impl DesktopStateStore {
             playback.duration,
         );
         touch_session_snapshot(&mut session);
-        save_session_snapshot_to_connection(&connection, &session)?;
+        save_session_snapshot_to_connection(&connection, &mut session)?;
         self.mark_session_changed()?;
         Ok(session)
     }
@@ -225,7 +226,7 @@ impl DesktopStateStore {
                 reset_session_playback_state(&mut session);
             }
             touch_session_snapshot(&mut session);
-            save_session_snapshot_to_connection(&connection, &session)?;
+            save_session_snapshot_to_connection(&connection, &mut session)?;
             self.mark_session_changed()?;
         }
 
@@ -261,7 +262,7 @@ impl DesktopStateStore {
                 reset_session_playback_state(&mut session);
             }
             touch_session_snapshot(&mut session);
-            save_session_snapshot_to_connection(&connection, &session)?;
+            save_session_snapshot_to_connection(&connection, &mut session)?;
             self.mark_session_changed()?;
         }
 
@@ -342,7 +343,7 @@ impl DesktopStateStore {
             }
             touch_session_snapshot(&mut session);
             if persist {
-                save_session_snapshot_to_connection(&connection, &session)?;
+                save_session_snapshot_to_connection(&connection, &mut session)?;
                 self.mark_session_changed()?;
             }
         }
@@ -361,7 +362,7 @@ impl DesktopStateStore {
             session.current_track_id = Some(next_track_id);
             reset_session_playback_state(&mut session);
             touch_session_snapshot(&mut session);
-            save_session_snapshot_to_connection(&connection, &session)?;
+            save_session_snapshot_to_connection(&connection, &mut session)?;
             self.mark_session_changed()?;
         }
 
@@ -381,7 +382,7 @@ impl DesktopStateStore {
             session.current_track_id = Some(previous_track_id);
             reset_session_playback_state(&mut session);
             touch_session_snapshot(&mut session);
-            save_session_snapshot_to_connection(&connection, &session)?;
+            save_session_snapshot_to_connection(&connection, &mut session)?;
             self.mark_session_changed()?;
         }
 
@@ -422,7 +423,7 @@ impl DesktopStateStore {
                 reset_session_playback_state(&mut session);
             }
             touch_session_snapshot(&mut session);
-            save_session_snapshot_to_connection(&connection, &session)?;
+            save_session_snapshot_to_connection(&connection, &mut session)?;
             self.mark_session_changed()?;
         }
 
@@ -2993,6 +2994,73 @@ fn normalize_entity_name(value: &str, fallback_label: &str) -> Result<String, St
         Err(format!("{fallback_label} name is required."))
     } else {
         Ok(String::from(trimmed))
+    }
+}
+
+impl DesktopStateStore {
+    /// Mainline's lightweight sidebar projection: load metadata without rehydrating every track.
+    pub fn load_catalog_structure(&mut self) -> Result<Value, String> {
+        let mut connection = self.connection()?;
+        self.ensure_catalog_consistency_ready(&mut connection)?;
+        let snapshot = load_catalog_shell_snapshot_from_connection(&connection, false)?;
+        Ok(json!({"libraries":snapshot.libraries,"playlists":snapshot.playlists}))
+    }
+    pub fn frontend_groups(
+        &self,
+        library: Option<&str>,
+        kind: &str,
+        artist: Option<&str>,
+    ) -> Result<Value, String> {
+        let c = self.connection()?;
+        crate::catalog_browse::initialize(&c)?;
+        crate::navigation::query_group_summary_from_connection(&c, library, kind, artist)
+    }
+    pub fn frontend_group_tracks(
+        &self,
+        r: &crate::desktop_types::GroupTrackQueryRequest,
+    ) -> Result<crate::sorting::QueryTracksResult, String> {
+        let c = self.connection()?;
+        crate::catalog_browse::initialize(&c)?;
+        crate::navigation::query_group_tracks_from_connection(
+            &c,
+            &r.group_kind,
+            &r.group_key,
+            r.artist_filter.as_deref(),
+            r.active_library.as_deref(),
+            &r.search_query,
+            &r.type_filter,
+            &r.sort_option,
+            r.offset,
+            r.limit,
+            r.include_track_ids,
+        )
+    }
+    pub fn frontend_load_json(&self, key: &str) -> Result<Option<Value>, String> {
+        self.load_json(key)
+    }
+    pub fn frontend_save_json(&self, key: &str, value: &Value) -> Result<(), String> {
+        self.save_json(key, value)
+    }
+    pub fn frontend_edit_queue(
+        &self,
+        action: crate::session_ops::QueueEdit,
+        ids: &[String],
+        expected: u64,
+        anchor: Option<&str>,
+    ) -> Result<(SessionStateSnapshot, Vec<String>), String> {
+        let connection = self.connection()?;
+        let mut session = self.load_session_snapshot()?;
+        if session.queue_revision != expected || session.current_track_id.as_deref() != anchor {
+            return Err("OFPLAYER_QUEUE_CHANGED".into());
+        }
+        let known = crate::session_ops::load_all_catalog_track_ids(&connection)?;
+        if ids.iter().any(|id| !known.contains(id)) {
+            return Err("Unknown queue track".into());
+        }
+        let edited = crate::session_ops::edit_queue(&mut session, action, ids);
+        crate::session_ops::save_session_snapshot_to_connection(&connection, &mut session)?;
+        self.mark_session_changed()?;
+        Ok((session, edited))
     }
 }
 

@@ -1,0 +1,22 @@
+{
+  "name": "ofplayer-winui-web",
+  "private": true,
+  "version": "26.0.12",
+  "type": "module",
+  "scripts": {
+    "build": "npm run typecheck && vite build",
+    "typecheck": "vue-tsc --noEmit -p tsconfig.json",
+    "test": "node --experimental-strip-types --test src/immersiveWeb/playbackMetadata.test.ts src/immersiveWeb/frameLoop.test.ts src/immersiveWeb/hostBridge.test.ts src/immersiveWeb/artworkBackdrop.test.ts src/immersiveWeb/backdrop.test.ts src/immersiveWeb/backdropField.test.ts src/immersiveWeb/backdropFlow.test.ts src/models/lyrics.test.ts src/services/capsuleWindowHost.test.ts src/services/lyricCapsuleBridge.test.ts src/services/lyricCapsuleAppearance.test.ts src/services/webLocale.test.ts"
+  },
+  "dependencies": {
+    "lucide-vue-next": "^1.0.0",
+    "vue": "^3.5.32"
+  },
+  "devDependencies": {
+    "@types/node": "^25.9.1",
+    "@vitejs/plugin-vue": "^6.0.6",
+    "typescript": "^6.0.3",
+    "vite": "^8.0.8",
+    "vue-tsc": "^3.2.9"
+  }
+}

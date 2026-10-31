@@ -19,3 +19,8 @@ __pycache__/
 *.key
 .env
 .env.*
+
+# Locally generated embedded player pages
+web/node_modules/
+web/dist/
+src-winui/OFPlayer.Community/Assets/web/

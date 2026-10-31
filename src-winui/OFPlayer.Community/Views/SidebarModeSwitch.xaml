@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl
+    x:Class="OFPlayer_WinUI.Views.SidebarModeSwitch"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.ThemeDictionaries>
+                <ResourceDictionary x:Key="Default">
+                    <SolidColorBrush x:Key="ModeTrackBrush" Color="#12FFFFFF"/>
+                    <SolidColorBrush x:Key="ModeTrackStrokeBrush" Color="Transparent"/>
+                    <Thickness x:Key="ModeTrackBorderThickness">0</Thickness>
+                    <SolidColorBrush x:Key="ModeThumbBrush" Color="#FF464646"/>
+                    <SolidColorBrush x:Key="ModeThumbStrokeBrush" Color="#14FFFFFF"/>
+                    <StaticResource x:Key="ModeChosenForegroundBrush" ResourceKey="TextFillColorPrimaryBrush"/>
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="Light">
+                    <SolidColorBrush x:Key="ModeTrackBrush" Color="#0D000000"/>
+                    <SolidColorBrush x:Key="ModeTrackStrokeBrush" Color="Transparent"/>
+                    <Thickness x:Key="ModeTrackBorderThickness">0</Thickness>
+                    <SolidColorBrush x:Key="ModeThumbBrush" Color="#FFFFFFFF"/>
+                    <SolidColorBrush x:Key="ModeThumbStrokeBrush" Color="#12000000"/>
+                    <StaticResource x:Key="ModeChosenForegroundBrush" ResourceKey="TextFillColorPrimaryBrush"/>
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="HighContrast">
+                    <SolidColorBrush x:Key="ModeTrackBrush" Color="Transparent"/>
+                    <SolidColorBrush x:Key="ModeTrackStrokeBrush" Color="{ThemeResource SystemColorWindowTextColor}"/>
+                    <!-- Without a fill the track needs an outline; elsewhere a border would break the 4 DIP grid. -->
+                    <Thickness x:Key="ModeTrackBorderThickness">1</Thickness>
+                    <SolidColorBrush x:Key="ModeThumbBrush" Color="{ThemeResource SystemColorHighlightColor}"/>
+                    <SolidColorBrush x:Key="ModeThumbStrokeBrush" Color="{ThemeResource SystemColorHighlightColor}"/>
+                    <SolidColorBrush x:Key="ModeChosenForegroundBrush" Color="{ThemeResource SystemColorHighlightTextColor}"/>
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
+            <!-- A segment of the place track. It has no fill of its own: the chosen place
+                 sits on the thumb behind the segments, which slides from one to the next. -->
+            <Style x:Key="ModeChoiceStyle" TargetType="RadioButton">
+                <!-- The theme's radio button is 120 wide at least; these are icon segments. -->
+                <Setter Property="MinWidth" Value="0"/>
+                <Setter Property="MinHeight" Value="0"/>
+                <Setter Property="Width" Value="40"/>
+                <Setter Property="Height" Value="32"/>
+                <Setter Property="Padding" Value="0"/>
+                <Setter Property="HorizontalAlignment" Value="Stretch"/>
+                <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}"/>
+                <Setter Property="UseSystemFocusVisuals" Value="True"/>
+                <Setter Property="FocusVisualMargin" Value="-2"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="RadioButton">
+                            <Grid Background="Transparent" CornerRadius="6">
+                                <Border x:Name="Hover" Background="{ThemeResource SubtleFillColorSecondaryBrush}" Opacity="0"/>
+                                <ContentPresenter x:Name="Glyph" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                  Content="{TemplateBinding Content}" Foreground="{TemplateBinding Foreground}"/>
+                                <VisualStateManager.VisualStateGroups>
+                                    <VisualStateGroup x:Name="CommonStates">
+                                        <VisualState x:Name="Normal"/>
+                                        <VisualState x:Name="PointerOver">
+                                            <VisualState.Setters><Setter Target="Hover.Opacity" Value="1"/></VisualState.Setters>
+                                        </VisualState>
+                                        <VisualState x:Name="Pressed">
+                                            <VisualState.Setters>
+                                                <Setter Target="Hover.Background" Value="{ThemeResource SubtleFillColorTertiaryBrush}"/>
+                                                <Setter Target="Hover.Opacity" Value="1"/>
+                                            </VisualState.Setters>
+                                        </VisualState>
+                                        <VisualState x:Name="Disabled">
+                                            <VisualState.Setters><Setter Target="Glyph.Foreground" Value="{ThemeResource TextFillColorDisabledBrush}"/></VisualState.Setters>
+                                        </VisualState>
+                                    </VisualStateGroup>
+                                    <VisualStateGroup x:Name="CheckStates">
+                                        <VisualState x:Name="Checked">
+                                            <VisualState.Setters><Setter Target="Glyph.Foreground" Value="{ThemeResource ModeChosenForegroundBrush}"/></VisualState.Setters>
+                                        </VisualState>
+                                        <VisualState x:Name="Unchecked"/>
+                                        <VisualState x:Name="Indeterminate"/>
+                                    </VisualStateGroup>
+                                </VisualStateManager.VisualStateGroups>
+                            </Grid>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+        </ResourceDictionary>
+    </UserControl.Resources>
+    <StackPanel>
+        <!-- Every length is a multiple of 4 so the track lands on whole pixels at 125 %. -->
+        <Border x:Name="Track" HorizontalAlignment="Left" Padding="4" CornerRadius="10" BorderThickness="{ThemeResource ModeTrackBorderThickness}"
+                Background="{ThemeResource ModeTrackBrush}" BorderBrush="{ThemeResource ModeTrackStrokeBrush}">
+            <Grid>
+                <Border x:Name="Thumb" HorizontalAlignment="Left" VerticalAlignment="Top" CornerRadius="6" BorderThickness="1"
+                        Background="{ThemeResource ModeThumbBrush}" BorderBrush="{ThemeResource ModeThumbStrokeBrush}"/>
+                <!-- One tab stop for the group; the arrow keys move between places. -->
+                <StackPanel x:Name="Choices" Orientation="Horizontal" Spacing="4" TabFocusNavigation="Once" SizeChanged="ChoicesSizeChanged">
+                    <RadioButton x:Name="LibraryChoice" Style="{StaticResource ModeChoiceStyle}" IsChecked="True" Click="ChoiceClick" Checked="ChoiceChecked">
+                        <FontIcon Glyph="&#xE8D6;" FontSize="16"/>
+                    </RadioButton>
+                    <RadioButton x:Name="VideoChoice" Style="{StaticResource ModeChoiceStyle}" Click="ChoiceClick" Checked="ChoiceChecked">
+                        <FontIcon Glyph="&#xE173;" FontSize="16"/>
+                    </RadioButton>
+                </StackPanel>
+            </Grid>
+        </Border>
+        <!-- In the compact pane the track stands above the library icon; a rule keeps them apart. -->
+        <Rectangle x:Name="Divider" Height="1" Margin="8,6,8,0" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" Visibility="Collapsed"/>
+    </StackPanel>
+</UserControl>

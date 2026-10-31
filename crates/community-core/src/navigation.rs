@@ -12,7 +12,7 @@ use crate::{
         build_diagnostic_step_profile, build_process_resource_diagnostics, DiagnosticStepProfile,
         ProcessResourceSnapshot,
     },
-    session_ops::SESSION_STATE_KEY,
+    session_ops::{load_all_catalog_track_ids, SESSION_STATE_KEY},
     sorting::{
         query_tracks, QueryTrackRow, QueryTracksDiagnostics, QueryTracksRequest, QueryTracksResult,
         SortableTrack,
@@ -22,7 +22,7 @@ use rusqlite::{params, Connection};
 use serde_json::Value;
 use std::{
     cell::RefCell,
-    collections::{BTreeSet, HashMap, HashSet},
+    collections::{BTreeMap, BTreeSet, HashMap, HashSet},
     time::Instant,
 };
 
@@ -127,7 +127,7 @@ pub(crate) fn resolve_navigation_summary_from_connection(
     let favorite_track_ids = load_favorite_track_ids(connection, &active_library_id)?;
     let recent_history_track_count =
         load_recently_played_track_count(connection, &active_library_id)?;
-    let queue_track_ids = load_current_queue_track_ids(connection, &library_track_id_set)?;
+    let queue_track_ids = load_current_queue_track_ids(connection)?;
     let album_group_count = load_album_group_count(connection, &active_library_id)?;
     let artist_group_count = load_artist_group_count(connection, &active_library_id)?;
     let playlists = load_playlist_headers_for_library(connection, &active_library_id)?;
@@ -339,9 +339,7 @@ pub(crate) fn query_collection_tracks_from_connection(
                 load_recently_played_track_ids(connection, &active_library_id)?
             }
             SMART_VIEW_FAVORITES => load_favorite_track_ids(connection, &active_library_id)?,
-            SMART_VIEW_CURRENT_QUEUE => {
-                load_current_queue_track_ids(connection, &library_track_id_set)?
-            }
+            SMART_VIEW_CURRENT_QUEUE => load_current_queue_track_ids(connection)?,
             SMART_VIEW_ALBUMS | SMART_VIEW_ARTISTS => library_track_ids.clone(),
             _ => Vec::new(),
         },
@@ -376,7 +374,13 @@ pub(crate) fn query_collection_tracks_from_connection(
     let mut result = query_tracks(QueryTracksRequest {
         search_query: request.search_query.clone(),
         type_filter: request.type_filter.clone(),
-        sort_option: request.sort_option.clone(),
+        // A queue is already ordered by the playback session. Re-sorting it as
+        // "recent" used to reverse the order shown by the current-queue page.
+        sort_option: if active_collection_key.as_deref() == Some("view:current-queue") {
+            String::from("manual")
+        } else {
+            request.sort_option.clone()
+        },
         offset: request.offset,
         limit: request.limit,
         include_track_ids: request.include_track_ids,
@@ -495,8 +499,8 @@ fn query_recently_played_tracks_from_connection(
         Some(limit) => limit.min(total_count),
         None => total_count,
     };
-    let max_offset = total_count.saturating_sub(limit.min(total_count));
-    let offset = request.offset.unwrap_or(0).min(max_offset);
+    // Match ordinary collection pagination: the last page may be partial.
+    let offset = request.offset.unwrap_or(0).min(total_count);
 
     let track_ids_start = Instant::now();
     let track_ids_resource_start = crate::diagnostics::capture_process_resource_snapshot();
@@ -832,6 +836,7 @@ fn load_recently_played_rows(
                     tracks.title,
                     tracks.artist,
                     tracks.album_artist,
+                    tracks.album,
                     tracks.file_name,
                     tracks.format,
                     tracks.duration,
@@ -867,14 +872,15 @@ fn load_recently_played_rows(
                     title: row.get(3)?,
                     artist: row.get(4)?,
                     album_artist: row.get(5)?,
-                    file_name: row.get(6)?,
-                    format: row.get(7)?,
-                    duration: row.get(8)?,
-                    file_size: row.get::<_, Option<i64>>(9)?.map(nonnegative_i64_to_u64),
-                    bitrate: row.get::<_, Option<i64>>(10)?.map(nonnegative_i64_to_u64),
-                    sample_rate: row.get::<_, Option<i64>>(11)?.map(nonnegative_i64_to_u64),
-                    bit_depth: row.get::<_, Option<i64>>(12)?.map(nonnegative_i64_to_u64),
-                    is_favorite: row.get::<_, i64>(13)? != 0,
+                    album: row.get(6)?,
+                    file_name: row.get(7)?,
+                    format: row.get(8)?,
+                    duration: row.get(9)?,
+                    file_size: row.get::<_, Option<i64>>(10)?.map(nonnegative_i64_to_u64),
+                    bitrate: row.get::<_, Option<i64>>(11)?.map(nonnegative_i64_to_u64),
+                    sample_rate: row.get::<_, Option<i64>>(12)?.map(nonnegative_i64_to_u64),
+                    bit_depth: row.get::<_, Option<i64>>(13)?.map(nonnegative_i64_to_u64),
+                    is_favorite: row.get::<_, i64>(14)? != 0,
                 })
             },
         )
@@ -986,10 +992,7 @@ fn resolve_projection_format(format: Option<&str>, file_name: Option<&str>) -> S
         .unwrap_or_else(|| String::from("AUDIO"))
 }
 
-fn load_current_queue_track_ids(
-    connection: &Connection,
-    valid_track_ids: &HashSet<String>,
-) -> Result<Vec<String>, String> {
+fn load_current_queue_track_ids(connection: &Connection) -> Result<Vec<String>, String> {
     let queue_track_ids = load_json_from_connection(connection, SESSION_STATE_KEY)?
         .and_then(|session| {
             session
@@ -1005,7 +1008,15 @@ fn load_current_queue_track_ids(
         })
         .unwrap_or_default();
 
-    Ok(unique_existing_track_ids(&queue_track_ids, valid_track_ids))
+    // The playing queue belongs to its source selection, not the library the
+    // user happens to browse now. Keep cross-library queues intact in the UI.
+    let valid_track_ids = load_all_catalog_track_ids(connection)?
+        .into_iter()
+        .collect();
+    Ok(unique_existing_track_ids(
+        &queue_track_ids,
+        &valid_track_ids,
+    ))
 }
 
 fn load_library_track_ids_by_order(
@@ -1050,40 +1061,47 @@ fn load_favorite_track_ids(
     )
 }
 
+// The quota reader can replace tracks with a filtered TEMP view. Let SQLite
+// choose the underlying covering index instead of naming an index on the view.
+const ALBUM_GROUP_COUNT_SQL: &str = "SELECT COUNT(DISTINCT
+    lower(trim(COALESCE(NULLIF(trim(album), ''), '未知专辑')))
+    || char(31) ||
+    lower(trim(COALESCE(NULLIF(trim(album_artist), ''), NULLIF(trim(artist), ''), '未知艺术家')))
+ )
+ FROM tracks
+ WHERE library_id = ?1";
+
 fn load_album_group_count(connection: &Connection, library_id: &str) -> Result<usize, String> {
     let count = connection
-        .query_row(
-            "SELECT COUNT(DISTINCT
-                lower(trim(COALESCE(NULLIF(trim(album), ''), '未知专辑')))
-                || char(31) ||
-                lower(trim(COALESCE(NULLIF(trim(album_artist), ''), NULLIF(trim(artist), ''), '未知艺术家')))
-             )
-             FROM tracks
-                  INDEXED BY idx_tracks_library_album_group
-             WHERE library_id = ?1",
-            [library_id],
-            |row| row.get::<_, i64>(0),
-        )
+        .query_row(ALBUM_GROUP_COUNT_SQL, [library_id], |row| {
+            row.get::<_, i64>(0)
+        })
         .map_err(|error| format!("Failed to query desktop album group count: {error}"))?;
 
     Ok(usize::try_from(count.max(0)).unwrap_or_default())
 }
 
-fn load_artist_group_count(connection: &Connection, library_id: &str) -> Result<usize, String> {
-    let count = connection
-        .query_row(
-            "SELECT COUNT(DISTINCT
-                lower(trim(COALESCE(NULLIF(trim(artist), ''), NULLIF(trim(album_artist), ''), '未知艺术家')))
-             )
-             FROM tracks
-                  INDEXED BY idx_tracks_library_artist_group
-             WHERE library_id = ?1",
-            [library_id],
-            |row| row.get::<_, i64>(0),
-        )
-        .map_err(|error| format!("Failed to query desktop artist group count: {error}"))?;
+const ARTIST_GROUP_COUNT_SQL: &str = "SELECT artists_json
+ FROM tracks t JOIN track_browse_metadata b ON b.track_id=t.id
+ WHERE t.library_id = ?1";
 
-    Ok(usize::try_from(count.max(0)).unwrap_or_default())
+fn load_artist_group_count(connection: &Connection, library_id: &str) -> Result<usize, String> {
+    let mut statement = connection
+        .prepare(ARTIST_GROUP_COUNT_SQL)
+        .map_err(|error| format!("Failed to prepare desktop artist group count: {error}"))?;
+    let rows = statement
+        .query_map([library_id], |row| row.get::<_, String>(0))
+        .map_err(|error| format!("Failed to query desktop artist group count: {error}"))?;
+    let mut artists = HashSet::new();
+    for row in rows {
+        let json = row.map_err(|error| format!("Failed to read desktop artists: {error}"))?;
+        let names: Vec<String> = serde_json::from_str(&json)
+            .map_err(|error| format!("Invalid artist credits: {error}"))?;
+        artists.extend(crate::catalog_browse::artist_names(
+            names.iter().map(String::as_str),
+        ));
+    }
+    Ok(artists.len())
 }
 
 fn load_playlist_track_ids(
@@ -1152,6 +1170,177 @@ pub(crate) fn load_sortable_track_cache_from_connection(
     load_sortable_track_cache(connection).map(|(cache, _diagnostics)| cache)
 }
 
+/// 曲目分组摘要（W2 专辑/艺术家浏览）：按 album 或 artist 聚合当前库。
+pub(crate) fn query_group_summary_from_connection(
+    connection: &Connection,
+    active_library: Option<&str>,
+    group_kind: &str,
+    artist_filter: Option<&str>,
+) -> Result<Value, String> {
+    let Some(library_id) = resolve_group_library_id(connection, active_library)? else {
+        return Ok(serde_json::json!({ "groups": [] }));
+    };
+    let cache = load_sortable_track_cache_from_connection(connection)?;
+    let mut groups: BTreeMap<String, (usize, f64, String)> = BTreeMap::new();
+
+    for track in cache
+        .values()
+        .filter(|track| track.library_id == library_id)
+        .filter(|track| {
+            artist_filter.is_none_or(|artist| {
+                group_labels_for_track(track, "artist")
+                    .iter()
+                    .any(|label| label == artist)
+            })
+        })
+    {
+        for label in group_labels_for_track(track, group_kind) {
+            let duration = track.duration.unwrap_or(0.0).max(0.0);
+            groups
+                .entry(label)
+                .and_modify(|entry| {
+                    entry.0 += 1;
+                    entry.1 += duration;
+                    // HashMap iteration order changes between queries; keep the cover stable.
+                    if track.id < entry.2 {
+                        entry.2 = track.id.clone();
+                    }
+                })
+                .or_insert((1, duration, track.id.clone()));
+        }
+    }
+
+    let groups = groups
+        .into_iter()
+        .map(
+            |(label, (track_count, duration_seconds, sample_track_id))| {
+                serde_json::json!({
+                    "key": label,
+                    "label": label,
+                    "trackCount": track_count,
+                    "durationSeconds": duration_seconds,
+                    "sampleTrackId": sample_track_id,
+                })
+            },
+        )
+        .collect::<Vec<_>>();
+
+    Ok(serde_json::json!({ "groups": groups }))
+}
+
+/// 分组内曲目查询（W2）：复用集合查询的搜索/排序/分页语义。
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn query_group_tracks_from_connection(
+    connection: &Connection,
+    group_kind: &str,
+    group_key: &str,
+    artist_filter: Option<&str>,
+    active_library: Option<&str>,
+    search_query: &str,
+    type_filter: &str,
+    sort_option: &str,
+    offset: Option<usize>,
+    limit: Option<usize>,
+    include_track_ids: Option<bool>,
+) -> Result<QueryTracksResult, String> {
+    let mut tracks = Vec::new();
+
+    if let Some(library_id) = resolve_group_library_id(connection, active_library)? {
+        let cache = load_sortable_track_cache_from_connection(connection)?;
+        let mut matching = cache
+            .values()
+            .filter(|track| track.library_id == library_id)
+            .filter(|track| {
+                artist_filter.is_none_or(|artist| {
+                    group_labels_for_track(track, "artist")
+                        .iter()
+                        .any(|label| label == artist)
+                })
+            })
+            .filter(|track| {
+                group_labels_for_track(track, group_kind)
+                    .iter()
+                    .any(|label| label == group_key)
+            })
+            .collect::<Vec<_>>();
+        matching.sort_by(|left, right| left.id.cmp(&right.id));
+
+        tracks = matching
+            .into_iter()
+            .enumerate()
+            .map(|(index, track)| {
+                let mut project = track.clone();
+                project.original_index = index as u32;
+                project
+            })
+            .collect();
+    }
+
+    query_tracks(QueryTracksRequest {
+        search_query: String::from(search_query),
+        type_filter: String::from(type_filter),
+        sort_option: String::from(sort_option),
+        offset,
+        limit,
+        include_track_ids,
+        tracks,
+    })
+}
+
+fn group_labels_for_track(track: &SortableTrack, group_kind: &str) -> Vec<String> {
+    if group_kind == "artist" && !track.artists.is_empty() {
+        return track.artists.clone();
+    }
+    let raw = if group_kind == "artist" {
+        track
+            .artist
+            .as_deref()
+            .or(track.album_artist.as_deref())
+            .unwrap_or("")
+    } else {
+        track.album.as_deref().unwrap_or("")
+    };
+    let trimmed = raw.trim();
+
+    if trimmed.is_empty() {
+        if group_kind == "artist" {
+            vec![String::from("未知艺术家")]
+        } else {
+            vec![String::from("未知专辑")]
+        }
+    } else {
+        if group_kind == "artist" {
+            crate::catalog_browse::artist_names([trimmed])
+        } else {
+            vec![String::from(trimmed)]
+        }
+    }
+}
+
+fn resolve_group_library_id(
+    connection: &Connection,
+    active_library: Option<&str>,
+) -> Result<Option<String>, String> {
+    if let Some(library_id) = active_library
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+    {
+        return Ok(Some(String::from(library_id)));
+    }
+
+    match connection.query_row(
+        "SELECT id FROM libraries ORDER BY order_index ASC, created_at_text ASC, id ASC LIMIT 1",
+        [],
+        |row| row.get::<_, String>(0),
+    ) {
+        Ok(id) => Ok(Some(id)),
+        Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
+        Err(error) => Err(format!(
+            "Failed to resolve the desktop group library: {error}"
+        )),
+    }
+}
+
 fn load_sortable_track_cache(
     connection: &Connection,
 ) -> Result<(HashMap<String, SortableTrack>, SortableTrackLoadDiagnostics), String> {
@@ -1176,8 +1365,13 @@ fn load_sortable_track_cache(
                     bitrate,
                     sample_rate,
                     bit_depth,
-                    is_favorite
-             FROM track_query_projection",
+                    is_favorite,
+                    b.artists_json,
+                    b.added_at_ms,
+                    COALESCE(CAST(f.modified_ns AS INTEGER)/1000000, b.modified_at_ms)
+             FROM track_query_projection t
+             LEFT JOIN track_browse_metadata b ON b.track_id=t.id
+             LEFT JOIN local_file_tracking f ON f.track_id=t.id",
         )
         .map_err(|error| {
             format!("Failed to prepare desktop track cache projection lookup: {error}")
@@ -1191,6 +1385,17 @@ fn load_sortable_track_cache(
                 display_title: Some(row.get(2)?),
                 title: Some(row.get(3)?),
                 artist: Some(row.get(4)?),
+                artists: crate::catalog_browse::artist_names(
+                    serde_json::from_str::<Vec<String>>(
+                        &row.get::<_, Option<String>>(19)?
+                            .unwrap_or_else(|| "[]".into()),
+                    )
+                    .unwrap_or_default()
+                    .iter()
+                    .map(String::as_str),
+                ),
+                added_at_ms: row.get(20)?,
+                modified_at_ms: row.get(21)?,
                 album_artist: Some(row.get(5)?),
                 album: Some(row.get(6)?),
                 genre: Some(row.get(7)?),
@@ -1253,6 +1458,20 @@ fn create_sortable_track(record: &Value, original_index: u32) -> Result<Sortable
         display_title: optional_text_field(record, "displayTitle"),
         title: optional_text_field(record, "title"),
         artist: optional_text_field(record, "artist"),
+        artists: crate::catalog_browse::artist_names(
+            record
+                .get("artists")
+                .and_then(Value::as_array)
+                .into_iter()
+                .flatten()
+                .filter_map(Value::as_str),
+        ),
+        added_at_ms: record
+            .get("importedAt")
+            .and_then(Value::as_str)
+            .and_then(|value| chrono::DateTime::parse_from_rfc3339(value).ok())
+            .map(|date| date.timestamp_millis()),
+        modified_at_ms: record.get("modifiedAtMs").and_then(Value::as_i64),
         album_artist: optional_text_field(record, "albumArtist"),
         album: optional_text_field(record, "album"),
         genre: optional_text_field(record, "genre"),
@@ -1367,191 +1586,4 @@ fn is_known_smart_view_key(view_key: &str) -> bool {
             | SMART_VIEW_ALBUMS
             | SMART_VIEW_ARTISTS
     )
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::schema::initialize_schema;
-    use rusqlite::{params, Connection};
-
-    fn setup_connection() -> Connection {
-        let connection = Connection::open_in_memory().expect("in-memory db should open");
-        initialize_schema(&connection).expect("schema should initialize");
-        connection
-    }
-
-    fn insert_track(connection: &Connection, id: &str, library_id: &str, order: i64) {
-        connection
-            .execute(
-                "INSERT INTO tracks
-                   (id, library_id, library_order, imported_at_text, is_favorite,
-                    title, display_title, file_name, format, payload_json, updated_at)
-                 VALUES (?1, ?2, ?3, ?4, 0, ?1, ?1, ?1, 'MP3', '{}', 1)",
-                params![
-                    id,
-                    library_id,
-                    order,
-                    format!("2026-05-09T00:00:{order:02}Z")
-                ],
-            )
-            .expect("track should insert");
-    }
-
-    fn insert_history(
-        connection: &Connection,
-        id: &str,
-        track_id: Option<&str>,
-        recorded_at: &str,
-    ) {
-        insert_history_with_type(connection, id, track_id, recorded_at, "played");
-    }
-
-    fn insert_history_with_type(
-        connection: &Connection,
-        id: &str,
-        track_id: Option<&str>,
-        recorded_at: &str,
-        entry_type: &str,
-    ) {
-        connection
-            .execute(
-                "INSERT INTO playback_history
-                   (id, track_id, recorded_at_text, payload_json, updated_at)
-                 VALUES (?1, ?2, ?3, ?4, 1)",
-                params![
-                    id,
-                    track_id,
-                    recorded_at,
-                    format!("{{\"type\":\"{entry_type}\"}}")
-                ],
-            )
-            .expect("history entry should insert");
-
-        if entry_type == "played" {
-            if let Some(track_id) = track_id {
-                connection
-                    .execute(
-                        "INSERT INTO playback_history_latest
-                           (track_id, latest_history_id, recorded_at_text, updated_at)
-                         VALUES (?1, ?2, ?3, 1)
-                         ON CONFLICT(track_id) DO UPDATE SET
-                           latest_history_id = excluded.latest_history_id,
-                           recorded_at_text = excluded.recorded_at_text,
-                           updated_at = excluded.updated_at
-                         WHERE excluded.recorded_at_text > playback_history_latest.recorded_at_text
-                            OR (
-                              excluded.recorded_at_text = playback_history_latest.recorded_at_text
-                              AND excluded.latest_history_id > playback_history_latest.latest_history_id
-                            )",
-                        params![track_id, id, recorded_at],
-                    )
-                    .expect("latest history projection should upsert");
-            }
-        }
-    }
-
-    #[test]
-    fn recently_played_ignores_non_played_history_entries() {
-        let connection = setup_connection();
-        insert_track(&connection, "track-a", "library-a", 1);
-        insert_track(&connection, "track-b", "library-a", 2);
-        insert_history_with_type(
-            &connection,
-            "history-a-played",
-            Some("track-a"),
-            "2026-05-09T10:00:00Z",
-            "played",
-        );
-        insert_history_with_type(
-            &connection,
-            "history-b-paused",
-            Some("track-b"),
-            "2026-05-09T10:10:00Z",
-            "paused",
-        );
-
-        let track_ids = load_recently_played_track_ids(&connection, "library-a")
-            .expect("recently played ids should load");
-        let count = load_recently_played_track_count(&connection, "library-a")
-            .expect("recently played count should load");
-
-        assert_eq!(track_ids, vec!["track-a"]);
-        assert_eq!(count, 1);
-    }
-
-    #[test]
-    fn recently_played_track_ids_are_unique_and_ordered_by_latest_history() {
-        let connection = setup_connection();
-        insert_track(&connection, "track-a", "library-a", 1);
-        insert_track(&connection, "track-b", "library-a", 2);
-        insert_track(&connection, "track-c", "library-b", 3);
-        insert_history(
-            &connection,
-            "history-a-old",
-            Some("track-a"),
-            "2026-05-09T10:00:00Z",
-        );
-        insert_history(
-            &connection,
-            "history-b",
-            Some("track-b"),
-            "2026-05-09T10:05:00Z",
-        );
-        insert_history(
-            &connection,
-            "history-a-new",
-            Some("track-a"),
-            "2026-05-09T10:10:00Z",
-        );
-        insert_history(
-            &connection,
-            "history-c-other-library",
-            Some("track-c"),
-            "2026-05-09T10:20:00Z",
-        );
-        insert_history(&connection, "history-null", None, "2026-05-09T10:30:00Z");
-
-        let track_ids = load_recently_played_track_ids(&connection, "library-a")
-            .expect("recently played ids should load");
-
-        assert_eq!(track_ids, vec!["track-a", "track-b"]);
-    }
-
-    #[test]
-    fn recently_played_track_count_counts_distinct_library_tracks() {
-        let connection = setup_connection();
-        insert_track(&connection, "track-a", "library-a", 1);
-        insert_track(&connection, "track-b", "library-a", 2);
-        insert_track(&connection, "track-c", "library-b", 3);
-        insert_history(
-            &connection,
-            "history-a-old",
-            Some("track-a"),
-            "2026-05-09T10:00:00Z",
-        );
-        insert_history(
-            &connection,
-            "history-a-new",
-            Some("track-a"),
-            "2026-05-09T10:10:00Z",
-        );
-        insert_history(
-            &connection,
-            "history-b",
-            Some("track-b"),
-            "2026-05-09T10:05:00Z",
-        );
-        insert_history(
-            &connection,
-            "history-c-other-library",
-            Some("track-c"),
-            "2026-05-09T10:20:00Z",
-        );
-
-        let count = load_recently_played_track_count(&connection, "library-a")
-            .expect("recently played count should load");
-
-        assert_eq!(count, 2);
-    }
 }

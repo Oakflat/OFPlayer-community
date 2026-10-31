@@ -87,6 +87,16 @@ pub(crate) fn load_session_snapshot_from_connection(
         last_interacted_at,
         current_track_id,
         queue_track_ids: normalized_queue_track_ids,
+        queue_revision: existing_session
+            .as_ref()
+            .and_then(|s| s.get("queueRevision"))
+            .and_then(Value::as_u64)
+            .unwrap_or(0),
+        queue_initialized: existing_session
+            .as_ref()
+            .and_then(|s| s.get("queueInitialized"))
+            .and_then(Value::as_bool)
+            .unwrap_or(false),
         playback_status,
         current_time,
         duration,
@@ -95,11 +105,93 @@ pub(crate) fn load_session_snapshot_from_connection(
 
 pub(crate) fn save_session_snapshot_to_connection(
     connection: &Connection,
-    session: &SessionStateSnapshot,
+    session: &mut SessionStateSnapshot,
 ) -> Result<(), String> {
-    let payload = serde_json::to_value(session)
+    let mut payload = serde_json::to_value(&*session)
         .map_err(|error| format!("Failed to encode desktop playback session snapshot: {error}"))?;
-    save_json_to_connection(connection, SESSION_STATE_KEY, &payload)
+    save_session_value_to_connection(connection, &mut payload)?;
+    session.queue_revision = payload["queueRevision"].as_u64().unwrap_or(0);
+    Ok(())
+}
+
+/// Also used by legacy session restoration: a restored older payload must not
+/// roll the queue revision backwards and make delayed IPC replies look fresh.
+pub(crate) fn save_session_value_to_connection(
+    connection: &Connection,
+    payload: &mut Value,
+) -> Result<(), String> {
+    if !payload.is_object() {
+        return Err("Playback session must be an object.".into());
+    }
+    let previous = load_json_from_connection(connection, SESSION_STATE_KEY)?;
+    let revision = previous
+        .as_ref()
+        .and_then(|s| s.get("queueRevision"))
+        .and_then(Value::as_u64)
+        .unwrap_or(0);
+    let changed =
+        previous.as_ref().and_then(|s| s.get("queueTrackIds")) != payload.get("queueTrackIds");
+    payload["queueRevision"] = Value::from(if changed {
+        revision
+            .checked_add(1)
+            .ok_or("Playback queue revision exhausted.")?
+    } else {
+        revision
+    });
+    save_json_to_connection(connection, SESSION_STATE_KEY, payload)
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum QueueEdit {
+    Next,
+    Append,
+    Remove,
+}
+
+impl QueueEdit {
+    pub fn parse(value: &str) -> Result<Self, String> {
+        match value {
+            "next" => Ok(Self::Next),
+            "append" => Ok(Self::Append),
+            "remove" => Ok(Self::Remove),
+            _ => Err("Unknown playback queue operation.".into()),
+        }
+    }
+}
+
+/// Queue-only editing. The current item is the continuation anchor, including
+/// while paused; never remove/move it or change its persisted playback fields.
+pub(crate) fn edit_queue(
+    session: &mut SessionStateSnapshot,
+    action: QueueEdit,
+    ids: &[String],
+) -> Vec<String> {
+    let valid = ids.iter().map(|id| id.trim().to_owned()).collect();
+    let mut edited = normalize_session_queue_track_ids(ids, &valid);
+    let queued: HashSet<_> = session.queue_track_ids.iter().cloned().collect();
+    edited.retain(|id| {
+        Some(id) != session.current_track_id.as_ref()
+            && (action != QueueEdit::Remove || queued.contains(id))
+    });
+    let moving: HashSet<_> = edited.iter().collect();
+    session.queue_track_ids.retain(|id| !moving.contains(id));
+    if action != QueueEdit::Remove {
+        let index = if action == QueueEdit::Next {
+            session
+                .current_track_id
+                .as_ref()
+                .and_then(|id| session.queue_track_ids.iter().position(|q| q == id))
+                .map(|i| i + 1)
+                .unwrap_or(0)
+        } else {
+            session.queue_track_ids.len()
+        };
+        session
+            .queue_track_ids
+            .splice(index..index, edited.iter().cloned());
+    }
+    session.queue_initialized = true;
+    edited
 }
 
 pub(crate) fn touch_session_snapshot(session: &mut SessionStateSnapshot) {
@@ -184,22 +276,13 @@ pub(crate) fn build_queue_from_catalog(
     let visible_queue_track_ids =
         normalize_session_queue_track_ids(persisted_queue_track_ids, &available_track_id_set);
 
-    if visible_queue_track_ids.is_empty() {
+    if persisted_queue_track_ids.is_empty() {
         return available_track_ids.to_vec();
     }
 
-    let mut next_queue_track_ids = visible_queue_track_ids.clone();
-
-    for track_id in available_track_ids {
-        if !next_queue_track_ids
-            .iter()
-            .any(|queued_track_id| queued_track_id == track_id)
-        {
-            next_queue_track_ids.push(track_id.clone());
-        }
-    }
-
-    next_queue_track_ids
+    // A saved playlist/filtered queue must not grow into the whole library on
+    // restart or catalog synchronization. Only prune tracks that disappeared.
+    visible_queue_track_ids
 }
 
 pub(crate) fn resolve_adjacent_session_track_id(

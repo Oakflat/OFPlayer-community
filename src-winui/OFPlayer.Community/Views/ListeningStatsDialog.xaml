@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ContentDialog x:Class="OFPlayer_WinUI.Views.ListeningStatsDialog" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" DefaultButton="Close" Style="{StaticResource OFPlayerDialogStyle}">
+  <ContentDialog.Resources>
+    <x:Double x:Key="ContentDialogMaxWidth">900</x:Double>
+    <DataTemplate x:Key="RankTemplate">
+      <Grid Padding="0,10" ColumnSpacing="12">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="24" />
+          <ColumnDefinition Width="44" />
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+        <TextBlock Text="{Binding Rank}" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+        <Border Grid.Column="1" Width="44" Height="44" CornerRadius="6" Background="{ThemeResource ControlFillColorSecondaryBrush}">
+          <Grid>
+            <FontIcon Glyph="" FontSize="18" Opacity="0.4" />
+            <Image Loaded="OnArtworkLoaded" Stretch="UniformToFill" />
+          </Grid>
+        </Border>
+        <StackPanel Grid.Column="2" VerticalAlignment="Center">
+          <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+          <TextBlock Text="{Binding Subtitle}" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextTrimming="CharacterEllipsis" />
+        </StackPanel>
+        <TextBlock Grid.Column="3" Text="{Binding TimesText}" FontSize="12" VerticalAlignment="Center" TextAlignment="Right" />
+      </Grid>
+    </DataTemplate>
+  </ContentDialog.Resources>
+  <ScrollViewer x:Name="Scroller" HorizontalScrollBarVisibility="Disabled" HorizontalContentAlignment="Stretch">
+    <StackPanel x:Name="Body" Spacing="24" Margin="0,0,24,8">
+      <Grid ColumnSpacing="12">
+        <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+        <TextBlock x:Name="SubtitleLabel" TextWrapping="Wrap" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+        <ComboBox x:Name="Range" Grid.Column="1" HorizontalAlignment="Right" SelectedIndex="2" SelectionChanged="RangeChanged">
+          <ComboBoxItem Tag="7" />
+          <ComboBoxItem Tag="30" />
+          <ComboBoxItem Tag="120" />
+          <ComboBoxItem Tag="365" />
+        </ComboBox>
+      </Grid>
+      <ProgressBar x:Name="BusyIndicator" IsIndeterminate="True" Visibility="Collapsed" />
+      <InfoBar x:Name="Notice" IsClosable="False" />
+      <StackPanel x:Name="Results" Spacing="24">
+        <StackPanel Spacing="8">
+          <TextBlock x:Name="StatTotal" FontSize="44" FontWeight="SemiBold" />
+          <TextBlock x:Name="TotalLabel" TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+        </StackPanel>
+        <Grid ColumnSpacing="24">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition />
+            <ColumnDefinition />
+            <ColumnDefinition />
+          </Grid.ColumnDefinitions>
+          <StackPanel Spacing="4">
+            <TextBlock x:Name="StatPlays" FontSize="24" />
+            <TextBlock x:Name="PlaysLabel" TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+          </StackPanel>
+          <StackPanel Grid.Column="1" Spacing="4">
+            <TextBlock x:Name="StatActive" FontSize="24" />
+            <TextBlock x:Name="ActiveLabel" TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+          </StackPanel>
+          <StackPanel Grid.Column="2" Spacing="4">
+            <TextBlock x:Name="StatStreak" FontSize="24" />
+            <TextBlock x:Name="StreakLabel" TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+          </StackPanel>
+        </Grid>
+        <Border Background="{ThemeResource ControlFillColorSecondaryBrush}" CornerRadius="10" Padding="20">
+          <StackPanel Spacing="12">
+            <TextBlock x:Name="CalendarLabel" FontWeight="SemiBold" />
+            <ScrollViewer HorizontalScrollBarVisibility="Auto" HorizontalScrollMode="Enabled">
+              <Grid x:Name="HeatmapHost" HorizontalAlignment="Left" />
+            </ScrollViewer>
+            <TextBlock x:Name="CalendarRange" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+            <TextBlock x:Name="PeakLine" FontSize="12" TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+          </StackPanel>
+        </Border>
+        <Pivot>
+          <PivotItem x:Name="TopTracksTab">
+            <ItemsControl x:Name="TopTracksList" ItemTemplate="{StaticResource RankTemplate}" />
+          </PivotItem>
+          <PivotItem x:Name="TopAlbumsTab">
+            <ItemsControl x:Name="AlbumGroupsList" ItemTemplate="{StaticResource RankTemplate}" />
+          </PivotItem>
+        </Pivot>
+      </StackPanel>
+      <Button x:Name="RefreshButton" Click="RefreshClicked" HorizontalAlignment="Left" />
+    </StackPanel>
+  </ScrollViewer>
+</ContentDialog>

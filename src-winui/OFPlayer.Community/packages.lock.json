@@ -57,6 +57,9 @@
           "Microsoft.WindowsAppSDK.Base": "1.8.251216001"
         }
       },
+      "ofplayer.community.presentation": {
+        "type": "Project"
+      },
       "ofplayer.windowsmedia": {
         "type": "Project"
       }

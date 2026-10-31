@@ -2,9 +2,9 @@
 
 > 音乐能跨越我们与彼此之间的偏见，跨越时间与空间，传达作者的想法。
 
-**OFPlayer Community** 是专注本机音乐与视频播放的 Windows 桌面社区版，正式接替原 Tauri Community。
+**OFPlayer Community** 是支持本机音乐、视频和第三方媒体库的 Windows 桌面社区版，接替原 Tauri Community。
 
-这一代客户端告别了 WebView 方案，采用 **WinUI 原生界面 + Rust 音乐内核 + Windows Media 视频引擎** 的全新架构，专注于纯粹、流畅的 Local-First 桌面视听体验。本仓库面向公开社区维护，包含独立构建所需的完整源码与公共依赖，保留可本地构建、可审阅、可二次开发的桌面播放器基线。
+客户端采用 **WinUI 原生界面 + Rust 音乐内核 + Windows Media 视频引擎**。曲库、播放栏、歌词、队列和托盘沿用主线 WinUI 的界面与交互；沉浸播放和桌面歌词胶囊使用本仓源码构建的 Vue/WebView2 页面。本仓库独立构建，不依赖私有 Hub 服务、账号或许可证。
 
 ---
 
@@ -22,13 +22,15 @@ OFPlayer Community 专注于打磨本机媒体播放体验，去除了复杂的�
 
 | 模块 | 核心支持能力 |
 | :--- | :--- |
-| **本机音乐** | 本地音频导入、曲库管理、歌单、收藏、播放队列、本地歌词显示、音频输出设备选择 |
+| **本机音乐** | 文件与目录导入、专辑/歌手浏览、搜索筛选、歌单、收藏、播放历史、队列编辑与排序、定时歌词、封面与歌曲详情、输出设备选择 |
+| **播放界面** | 主线播放栏、沉浸播放、桌面歌词胶囊、主题与封面背景、托盘和关闭行为设置 |
+| **第三方媒体库** | 用户配置的 WebDAV、Navidrome/Subsonic；连接管理、浏览及下载缓存播放 |
 | **本机视频** | 本地视频文件播放、外挂/内嵌字幕加载、倍速调节、全屏沉浸播放、播放进度自动恢复 |
 | **底层架构** | **WinUI** 原生桌面交互界面 + **Rust** 高性能音频内核 + **Windows Media** 视频渲染 |
 
 **社区版不包含的内容：**
 
-- 不包含一起听、远程串流、设备互联及云曲库功能
+- 不包含设备配对、OFPlayer 串流、handoff、Together 和官方云曲库
 - 不包含账号系统、登录同步及许可证购买流程
 - 不包含官方自动更新服务与商店专用打包分发流程
 
@@ -43,24 +45,20 @@ OFPlayer Community 专注于打磨本机媒体播放体验，去除了复杂的�
 - **PowerShell 7**
 - **Rustup**（Rust 工具链）
 - **.NET SDK**
+- **Node.js 与 npm**（构建沉浸页和歌词胶囊）
 - **Visual Studio Build Tools**（需勾选 C++ x64 编译工具与 Windows SDK）
 
 ### 编译与运行
 
-在仓库根目录下打开 PowerShell 7，依次执行以下命令完成 Rust 原生内核与 WinUI 客户端的构建：
+在仓库根目录下打开 PowerShell 7，执行以下命令，从当前源码构建嵌入页面、Rust 内核与 WinUI 客户端：
 
 ```powershell
-# 1. 指定 Rust 产物输出目录并构建原生音乐内核
-$env:CARGO_TARGET_DIR = Join-Path $PWD '.artifacts/native'
-cargo build --workspace --release --locked
-
-# 2. 构建 WinUI 桌面客户端
-dotnet build src-winui/OFPlayer.Community -c Release -p:Platform=x64 -p:RestoreLockedMode=true
+./scripts/build.ps1 -Configuration Release
 ```
 
 本机运行入口为 `.artifacts/dotnet/OFPlayer.Community/bin/x64/Release/net10.0-windows10.0.26100.0/win-x64/OFPlayer.Community.exe`。
 
-更多构建与测试说明见 [开发文档](docs/development.md)。本仓不包含内部签名、商店提交或分发打包脚本。
+更多构建与测试说明见 [开发文档](docs/development.md) 和 [界面与功能边界](docs/frontend-parity.md)。本仓不包含内部签名、商店提交或分发打包脚本。
 
 ---
 

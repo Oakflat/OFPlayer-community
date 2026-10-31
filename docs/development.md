@@ -4,9 +4,12 @@
 
 | 路径 | 职责 |
 | --- | --- |
-| crates/community-core | 本地音频、曲库、歌词、导入与旧数据迁移 |
+| crates/community-core | 本地音频、曲库、歌词、导入、第三方媒体库与旧数据迁移 |
 | crates/community-host | 音乐播放会话和本地进程通信 |
 | src-winui/OFPlayer.Community | WinUI 界面和系统媒体控制 |
+| src-winui/OFPlayer.Community.Presentation | 主线播放器的纯展示、协议与交互逻辑 |
+| src-winui/OFPlayer.Community.Protocol.Tests | 真实 C# 客户端与 Community host 的协议测试 |
+| web | 从源码构建的沉浸播放和歌词胶囊页面 |
 | src-winui/OFPlayer.WindowsMedia | Windows 本地视频后端 |
 | src-winui/OFPlayer.Community.Tests | 使用模拟 HTTP 和临时文件的托管测试 |
 | tests | 原生进程契约与依赖边界测试 |
@@ -15,7 +18,7 @@
 
 ## 构建
 
-先按 README 构建 Rust host，再构建 WinUI。依赖从 crates.io 和 NuGet 的公共源恢复，锁文件随源码保存。视频模块中的 `Native/compile.ps1` 仅负责从 C++ 源码编译本地 DLL。
+执行 `./scripts/build.ps1 -Configuration Release`，依次构建嵌入页面、Rust host 和 WinUI。依赖从 npm、crates.io 和 NuGet 的公共源恢复，锁文件随源码保存。视频模块中的 `Native/compile.ps1` 负责从 C++ 源码编译本地 DLL。
 
 构建结果用于本机开发与测试。仓库不提供签名、商店提交、分发打包或发布脚本。
 
@@ -46,10 +49,13 @@ try {
 
 ```powershell
 python tests/host_contract.py --host .artifacts/native/release/ofplayer-community-host.exe
+python tests/frontend_contract.py --host .artifacts/native/release/ofplayer-community-host.exe
 dotnet run --project src-winui/OFPlayer.Community.Tests -c Release -p:RestoreLockedMode=true
+dotnet run --project src-winui/OFPlayer.Community.Protocol.Tests -c Release -- .artifacts/native/release/ofplayer-community-host.exe
+npm --prefix web test
 ```
 
-测试使用合成媒体、临时数据库和模拟 HTTP，不调用真实账号或统计接口。覆盖曲库操作、失败切歌、后台导入、远程命令拒绝、迁移和每日活跃统计。
+测试使用合成媒体、临时数据库和模拟 HTTP，不调用真实账号或统计接口。覆盖曲库操作、失败切歌、后台导入、商业命令拒绝、迁移、每日活跃统计，以及主线 C# 协议、专辑/歌手浏览、队列编辑和第三方媒体库接入。
 
 ## 迁移
 

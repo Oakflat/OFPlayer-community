@@ -66,7 +66,7 @@ internal sealed class CommunityHost : IAsyncDisposable
         var handshake = await CallAsync("host_handshake");
         if (handshake?["edition"]?.GetValue<string>() != "community") throw new InvalidDataException("Community 播放内核不匹配。");
     }
-    private async Task MigrateLegacyAsync()
+    public async Task MigrateLegacyAsync()
     {
         if (IsFixture) return;
         if (Directory.Exists(DataRoot)) return;

@@ -24,15 +24,19 @@
   </PropertyGroup>
   <ItemGroup>
     <FrameworkReference Update="Microsoft.NETCore.App" RuntimeFrameworkVersion="10.0.12" />
+    <ProjectReference Include="..\OFPlayer.Community.Presentation\OFPlayer.Community.Presentation.csproj" />
     <ProjectReference Include="..\OFPlayer.WindowsMedia\OFPlayer.WindowsMedia.csproj" />
     <PackageReference Include="Microsoft.WindowsAppSDK.WinUI" Version="1.8.260803003" />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.4654" />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools.MSIX" Version="1.7.20250829.1" />
+    <Compile Remove="Services/FilePickerPlacement.cs" />
+    <EmbeddedResource Include="Services/Locales/*.json" LogicalName="OFPlayer.Localization.%(Filename).json" />
     <Content Include="Assets/**" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="$(CommunityNativeHost)" Link="ofplayer-community-host.exe" CopyToOutputDirectory="Always" CopyToPublishDirectory="Always" />
     <Content Include="..\OFPlayer.WindowsMedia\Native\ThirdParty\*-LICENSE.txt" Link="licenses\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
   <Target Name="VerifyCommunityHost" BeforeTargets="BeforeBuild">
     <Error Condition="!Exists('$(CommunityNativeHost)')" Text="Build the Community native host from this checkout before building WinUI." />
+    <Error Condition="!Exists('Assets/web/immersive.html') Or !Exists('Assets/web/lyric-capsule.html')" Text="Build the embedded player pages from this checkout with scripts/build.ps1." />
   </Target>
 </Project>

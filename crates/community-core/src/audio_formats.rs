@@ -28,6 +28,22 @@ pub fn is_dsd_audio_extension(extension: &str) -> bool {
 }
 
 pub fn is_supported_audio_content_type(content_type: &str) -> bool {
+    extension_for_content_type(content_type).is_some()
+        || matches!(
+            content_type
+                .split(';')
+                .next()
+                .unwrap_or_default()
+                .trim()
+                .to_ascii_lowercase()
+                .as_str(),
+            "audio/dsd" | "audio/x-dsd"
+        )
+}
+
+/// Returns a safe cache suffix only when the MIME type identifies one container.
+/// `audio/dsd` is deliberately omitted: both DSF and DFF use it in the wild.
+pub fn extension_for_content_type(content_type: &str) -> Option<&'static str> {
     let content_type = content_type
         .split(';')
         .next()
@@ -35,32 +51,20 @@ pub fn is_supported_audio_content_type(content_type: &str) -> bool {
         .trim()
         .to_ascii_lowercase();
 
-    matches!(
-        content_type.as_str(),
-        "audio/mpeg"
-            | "audio/mp3"
-            | "audio/wav"
-            | "audio/wave"
-            | "audio/x-wav"
-            | "audio/flac"
-            | "audio/x-flac"
-            | "audio/ogg"
-            | "audio/mp4"
-            | "audio/x-m4a"
-            | "audio/aac"
-            | "audio/aacp"
-            | "audio/x-aac"
-            | "audio/aif"
-            | "audio/aiff"
-            | "audio/x-aiff"
-            | "audio/x-caf"
-            | "audio/caf"
-            | "audio/x-matroska"
-            | "audio/dsd"
-            | "audio/x-dsd"
-            | "audio/x-dsf"
-            | "audio/x-dff"
-    )
+    match content_type.as_str() {
+        "audio/mpeg" | "audio/mp3" => Some("mp3"),
+        "audio/wav" | "audio/wave" | "audio/x-wav" => Some("wav"),
+        "audio/flac" | "audio/x-flac" => Some("flac"),
+        "audio/ogg" => Some("ogg"),
+        "audio/mp4" | "audio/x-m4a" => Some("m4a"),
+        "audio/aac" | "audio/aacp" | "audio/x-aac" => Some("aac"),
+        "audio/aif" | "audio/aiff" | "audio/x-aiff" => Some("aiff"),
+        "audio/x-caf" | "audio/caf" => Some("caf"),
+        "audio/x-matroska" => Some("mka"),
+        "audio/x-dsf" => Some("dsf"),
+        "audio/x-dff" => Some("dff"),
+        _ => None,
+    }
 }
 
 pub fn mime_type_for_extension(extension: &str) -> &'static str {
@@ -119,8 +123,19 @@ mod tests {
         assert!(is_supported_audio_content_type("audio/mp4; codecs=alac"));
         assert!(is_supported_audio_content_type("audio/x-caf"));
         assert!(is_supported_audio_content_type("audio/x-dsf"));
+        assert!(is_supported_audio_content_type("audio/dsd"));
         assert!(!is_supported_audio_content_type("audio/opus"));
         assert!(!is_supported_audio_content_type("audio/x-ms-wma"));
+    }
+
+    #[test]
+    fn ambiguous_dsd_mime_does_not_choose_wrong_container() {
+        assert_eq!(extension_for_content_type("audio/dsd"), None);
+        assert_eq!(
+            extension_for_content_type("audio/x-dsf; charset=binary"),
+            Some("dsf")
+        );
+        assert_eq!(extension_for_content_type("audio/x-dff"), Some("dff"));
     }
 
     #[test]

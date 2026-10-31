@@ -1,0 +1,445 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl
+    x:Class="OFPlayer_WinUI.Views.LibraryPageView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.ThemeDictionaries>
+                <ResourceDictionary x:Key="Default">
+                    <AcrylicBrush x:Key="TrackNavigationSurfaceBrush"
+                                  TintColor="#202020" TintOpacity="0.86" TintLuminosityOpacity="0.76"
+                                  FallbackColor="#202020"/>
+                    <SolidColorBrush x:Key="TrackNavigationAccentSoftBrush"
+                                     Color="{ThemeResource SystemAccentColor}" Opacity="0.18"/>
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="Light">
+                    <AcrylicBrush x:Key="TrackNavigationSurfaceBrush"
+                                  TintColor="#FAFAFA" TintOpacity="0.84" TintLuminosityOpacity="0.76"
+                                  FallbackColor="#FAFAFA"/>
+                    <SolidColorBrush x:Key="TrackNavigationAccentSoftBrush"
+                                     Color="{ThemeResource SystemAccentColor}" Opacity="0.14"/>
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="HighContrast">
+                    <SolidColorBrush x:Key="TrackNavigationSurfaceBrush" Color="{ThemeResource SystemColorWindowColor}"/>
+                    <SolidColorBrush x:Key="TrackNavigationAccentSoftBrush" Color="{ThemeResource SystemColorHighlightColor}"/>
+                    <SolidColorBrush x:Key="TrackNavigationAccentForegroundBrush" Color="{ThemeResource SystemColorHighlightTextColor}"/>
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
+            <Style x:Key="RowActionButtonStyle" TargetType="Button" BasedOn="{StaticResource QuietButtonStyle}">
+                <Setter Property="Width" Value="32"/>
+                <Setter Property="Height" Value="32"/>
+                <Setter Property="MinWidth" Value="32"/>
+                <Setter Property="MinHeight" Value="32"/>
+                <Setter Property="Padding" Value="0"/>
+                <Setter Property="CornerRadius" Value="6"/>
+                <Setter Property="IsTabStop" Value="False"/>
+                <Setter Property="HorizontalAlignment" Value="Center"/>
+                <Setter Property="VerticalAlignment" Value="Center"/>
+            </Style>
+            <Style x:Key="TrackNavigationMarkerButtonStyle" TargetType="Button">
+                <Setter Property="UseSystemFocusVisuals" Value="True"/>
+                <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                <Setter Property="VerticalContentAlignment" Value="Center"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <!-- The presenter fills the slot; the plate inside centres itself. -->
+                        <ControlTemplate TargetType="Button">
+                            <Grid Background="Transparent">
+                                <ContentPresenter Content="{TemplateBinding Content}"/>
+                            </Grid>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+        </ResourceDictionary>
+    </UserControl.Resources>
+    <Grid Padding="24,16,24,0" RowSpacing="0" CornerRadius="12,0,0,0" Background="{ThemeResource OFPlayerChromeSurfaceBrush}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0" ColumnSpacing="10" Margin="0,0,0,14">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel Spacing="6">
+                <Button x:Name="BackToGroupsButton" Visibility="Collapsed" Click="BackToGroups" HorizontalAlignment="Left" MinHeight="32" Padding="10,6" Margin="-10,0,0,-2" Style="{StaticResource QuietButtonStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <FontIcon Glyph="&#xE72B;" FontSize="12"/>
+                        <TextBlock x:Name="BackToGroupsLabel" MaxWidth="280" TextTrimming="CharacterEllipsis"/>
+                    </StackPanel>
+                </Button>
+                <TextBlock x:Name="PageTitle" FontSize="28" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <TextBlock x:Name="CountLabel" FontSize="12" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                    <ProgressRing x:Name="PageProgress" IsActive="False" Width="14" Height="14" VerticalAlignment="Center"/>
+                </StackPanel>
+            </StackPanel>
+            <!-- Playing the collection is the page's primary action; adding music is the
+                 secondary one. Libraries are created in the switcher, playlists in the sidebar. -->
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                <Button x:Name="PlayAllButton" IsEnabled="False" Click="PlayAll" Style="{StaticResource AccentButtonStyle}" MinHeight="32" Padding="12,5,14,6">
+                    <StackPanel Orientation="Horizontal" Spacing="8"><FontIcon Glyph="&#xE768;" FontSize="12"/><TextBlock x:Name="PlayAllLabel"/></StackPanel>
+                </Button>
+                <DropDownButton x:Name="ImportButton" IsEnabled="False" MinHeight="32">
+                    <StackPanel Orientation="Horizontal" Spacing="8"><FontIcon Glyph="&#xE710;" FontSize="12"/><TextBlock x:Name="ImportLabelText"/></StackPanel>
+                    <DropDownButton.Flyout>
+                        <MenuFlyout Placement="BottomEdgeAlignedRight">
+                            <MenuFlyoutItem x:Name="ImportFilesButton" IsEnabled="False" Click="ImportFiles"/>
+                            <MenuFlyoutItem x:Name="ImportFolderButton" IsEnabled="False" Click="ImportFolder"/>
+                            <MenuFlyoutItem x:Name="ImportPlaylistButton" IsEnabled="False" Click="ImportPlaylist"/>
+                        </MenuFlyout>
+                    </DropDownButton.Flyout>
+                </DropDownButton>
+            </StackPanel>
+        </Grid>
+
+        <Grid x:Name="LibraryToolbar" Grid.Row="1" ColumnSpacing="8" RowSpacing="10" Margin="0,0,0,12" SizeChanged="LibraryToolbarSizeChanged">
+            <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+            <AutoSuggestBox x:Name="Search" HorizontalAlignment="Stretch" VerticalAlignment="Center" QueryIcon="Find" TextChanged="SearchChanged"/>
+            <!-- The selectors size to their longest option in code-behind. When the
+                 toolbar is too narrow for them and a usable search box, this group
+                 wraps below the search box instead of clipping either. -->
+            <StackPanel x:Name="ToolbarActions" Grid.Column="1" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right" SizeChanged="ToolbarActionsSizeChanged">
+                <ComboBox x:Name="SortSelector" VerticalAlignment="Center" SelectionChanged="SortChanged">
+                    <ComboBoxItem Tag="manual"/>
+                    <ComboBoxItem Tag="recent"/>
+                    <ComboBoxItem Tag="title"/>
+                    <ComboBoxItem Tag="duration"/>
+                    <ComboBoxItem Tag="size"/>
+                    <ComboBoxItem Tag="date-added"/>
+                    <ComboBoxItem Tag="date-modified"/>
+                </ComboBox>
+                <ComboBox x:Name="ArtistSortSelector" Visibility="Collapsed" VerticalAlignment="Center" SelectionChanged="ArtistSortChanged">
+                    <ComboBoxItem Tag="name"/><ComboBoxItem Tag="track-count"/>
+                </ComboBox>
+                <ComboBox x:Name="FormatSelector" VerticalAlignment="Center" SelectionChanged="FormatChanged"/>
+                <!-- Selecting several songs is a mode with its own command bar; the entry is always in view. -->
+                <Button x:Name="SelectButton" VerticalAlignment="Center" Click="MultiSelectToggled" MinHeight="32">
+                    <StackPanel Orientation="Horizontal" Spacing="8"><FontIcon Glyph="&#xE762;" FontSize="14"/><TextBlock x:Name="SelectLabel"/></StackPanel>
+                </Button>
+                <Button x:Name="MoreButton" VerticalAlignment="Center" Style="{StaticResource QuietButtonStyle}" Visibility="Collapsed">
+                    <FontIcon Glyph="&#xE712;" FontSize="16"/>
+                    <Button.Flyout>
+                        <MenuFlyout x:Name="TrackOptionsFlyout" Placement="Bottom" Closed="TrackOptionsFlyoutClosed">
+                            <MenuFlyoutItem x:Name="TrackNavigationMenuItem" Click="OpenTrackNavigationFromMenu" Visibility="Collapsed"/>
+                        </MenuFlyout>
+                    </Button.Flyout>
+                </Button>
+            </StackPanel>
+            <!-- While selecting, the same row becomes the selection's command bar. Commands
+                 that do not fit move into its overflow menu instead of being clipped. -->
+            <CommandBar x:Name="SelectionBar" Grid.ColumnSpan="2" Visibility="Collapsed" DefaultLabelPosition="Right"
+                        IsDynamicOverflowEnabled="True" Background="Transparent" HorizontalAlignment="Stretch"
+                        HorizontalContentAlignment="Left" VerticalContentAlignment="Center" Margin="-12,-4,-8,-4">
+                <CommandBar.Content>
+                    <TextBlock x:Name="SelectionCountText" Margin="12,0,12,0" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                </CommandBar.Content>
+                <AppBarButton x:Name="SelectionPlayButton" Click="PlaySelection"><AppBarButton.Icon><FontIcon Glyph="&#xE768;"/></AppBarButton.Icon></AppBarButton>
+                <AppBarButton x:Name="SelectionPlayNextButton" Click="PlaySelectionNext"><AppBarButton.Icon><FontIcon Glyph="&#xE893;"/></AppBarButton.Icon></AppBarButton>
+                <AppBarButton x:Name="SelectionQueueAppendButton" Click="AppendSelectionToQueue"><AppBarButton.Icon><FontIcon Glyph="&#xE710;"/></AppBarButton.Icon></AppBarButton>
+                <AppBarButton x:Name="SelectionQueueRemoveButton" Click="RemoveSelectionFromQueue" Visibility="Collapsed"><AppBarButton.Icon><FontIcon Glyph="&#xE738;"/></AppBarButton.Icon></AppBarButton>
+                <AppBarButton x:Name="SelectionAddButton" Click="AddSelectionToPlaylist"><AppBarButton.Icon><FontIcon Glyph="&#xE710;"/></AppBarButton.Icon></AppBarButton>
+                <AppBarButton x:Name="SelectionFavoriteButton" Click="ToggleFavoriteSelection"><AppBarButton.Icon><FontIcon Glyph="&#xE734;"/></AppBarButton.Icon></AppBarButton>
+                <AppBarButton x:Name="RemoveFromPlaylistBarButton" Click="RemoveSelectionFromPlaylist" Visibility="Collapsed"><AppBarButton.Icon><FontIcon Glyph="&#xE738;"/></AppBarButton.Icon></AppBarButton>
+                <AppBarButton x:Name="SelectionDeleteButton" Click="DeleteSelection"><AppBarButton.Icon><FontIcon Glyph="&#xE74D;"/></AppBarButton.Icon></AppBarButton>
+                <AppBarSeparator/>
+                <AppBarButton x:Name="SelectAllButton" Click="SelectAllTracks"><AppBarButton.Icon><FontIcon Glyph="&#xE8B3;"/></AppBarButton.Icon></AppBarButton>
+                <AppBarButton x:Name="SelectionDoneButton" Click="ClearSelection"><AppBarButton.Icon><FontIcon Glyph="&#xE73E;"/></AppBarButton.Icon></AppBarButton>
+            </CommandBar>
+            <StackPanel x:Name="ImportPanel" Grid.Row="1" Grid.ColumnSpan="2" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center" Visibility="Collapsed">
+                <ProgressBar x:Name="ImportProgress" Width="160" Minimum="0" Maximum="100" VerticalAlignment="Center"/>
+                <TextBlock x:Name="ImportLabel" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextTrimming="CharacterEllipsis" MaxWidth="300"/>
+                <Button x:Name="CancelImportButton" Click="CancelImport"/>
+            </StackPanel>
+        </Grid>
+
+        <StackPanel x:Name="ArtistAlbumsSection" Grid.Row="2" Visibility="Collapsed" Spacing="8" Margin="0,0,0,12">
+            <TextBlock x:Name="ArtistAlbumsLabel" FontWeight="SemiBold"/>
+            <ListView x:Name="ArtistAlbumsList" IsItemClickEnabled="True" SelectionMode="None" ItemClick="OpenGroup"
+                      ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.HorizontalScrollMode="Enabled"
+                      ScrollViewer.VerticalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollMode="Disabled" MaxHeight="120">
+                <ListView.ItemsPanel><ItemsPanelTemplate><ItemsStackPanel Orientation="Horizontal"/></ItemsPanelTemplate></ListView.ItemsPanel>
+                <ListView.ItemTemplate><DataTemplate>
+                    <Grid Width="232" Padding="4,8" ColumnSpacing="12">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="64"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <Border Width="64" Height="64" CornerRadius="8" Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}">
+                            <Grid><TextBlock Text="{Binding Monogram}" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="24"/>
+                                <Image Stretch="UniformToFill" Loaded="GroupArtworkLoaded" DataContextChanged="GroupArtworkChanged"/></Grid>
+                        </Border>
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="4">
+                            <TextBlock Text="{Binding Label}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" ToolTipService.ToolTip="{Binding Label}"/>
+                            <TextBlock Text="{Binding SummaryText}" FontSize="12" TextTrimming="CharacterEllipsis" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                        </StackPanel>
+                    </Grid>
+                </DataTemplate></ListView.ItemTemplate>
+            </ListView>
+        </StackPanel>
+        <Border Grid.Row="3" Margin="-24,0,-24,0" CornerRadius="12" Background="{ThemeResource OFPlayerSheetSurfaceBrush}" IsHitTestVisible="False"/>
+        <Grid x:Name="TrackViewport" Grid.Row="3" SizeChanged="TrackViewportSizeChanged" PointerMoved="TrackNavigationPointerMoved" PointerExited="TrackNavigationPointerExited">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <Grid x:Name="TrackListHeader" Loaded="TrackColumnsLoaded" Unloaded="TrackColumnsUnloaded" Padding="12,10" ColumnSpacing="8" Margin="0,0,20,0">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="24"/><ColumnDefinition Width="44"/><ColumnDefinition Width="*"/><ColumnDefinition Width="0.65*"/><ColumnDefinition Width="60"/><ColumnDefinition Width="56"/><ColumnDefinition Width="32"/><ColumnDefinition Width="32"/></Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Text="#" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                <TextBlock x:Name="ColumnTitle" Grid.Column="2" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                <TextBlock x:Name="ColumnAlbum" Grid.Column="3" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                <TextBlock x:Name="ColumnDuration" Grid.Column="4" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                <TextBlock x:Name="ColumnFormat" Grid.Column="5" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                <FontIcon Grid.Column="6" Glyph="&#xE734;" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+            </Grid>
+            <GridView x:Name="GroupsList" Grid.Row="1" Padding="0,12,12,16" IsItemClickEnabled="True" SelectionMode="None" Visibility="Collapsed" ItemClick="OpenGroup">
+                <GridView.ItemContainerTransitions><TransitionCollection/></GridView.ItemContainerTransitions>
+                <GridView.ItemsPanel><ItemsPanelTemplate><ItemsWrapGrid Orientation="Horizontal"/></ItemsPanelTemplate></GridView.ItemsPanel>
+                <GridView.ItemContainerStyle><Style TargetType="GridViewItem"><Setter Property="Margin" Value="0,0,16,18"/><Setter Property="Padding" Value="0"/><Setter Property="HorizontalContentAlignment" Value="Stretch"/></Style></GridView.ItemContainerStyle>
+                <GridView.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Width="164" Spacing="8" Padding="4">
+                            <Border Width="156" Height="156" CornerRadius="12" Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}">
+                                <Grid>
+                                    <TextBlock Text="{Binding Monogram}" FontSize="40" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                    <Image Stretch="UniformToFill" Loaded="GroupArtworkLoaded" DataContextChanged="GroupArtworkChanged"/>
+                                </Grid>
+                            </Border>
+                            <TextBlock Text="{Binding Label}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" ToolTipService.ToolTip="{Binding Label}"/>
+                            <TextBlock Text="{Binding SummaryText}" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextTrimming="CharacterEllipsis"/>
+                        </StackPanel>
+                    </DataTemplate>
+                </GridView.ItemTemplate>
+            </GridView>
+            <ListView x:Name="Tracks" Grid.Row="1" Padding="0,0,20,0" IsItemClickEnabled="True" SelectionMode="Single" ItemClick="PlayTrack" SelectionChanged="TrackSelectionChanged" DragItemsStarting="TracksDragStarting" DragItemsCompleted="TracksDragCompleted" ContextRequested="TracksContextRequested">
+                <ListView.ItemsPanel>
+                    <ItemsPanelTemplate><ItemsStackPanel CacheLength="1"/></ItemsPanelTemplate>
+                </ListView.ItemsPanel>
+                <ListView.ItemContainerStyle><Style TargetType="ListViewItem" BasedOn="{StaticResource DefaultListViewItemStyle}"><Setter Property="Padding" Value="0"/><Setter Property="Margin" Value="0"/><Setter Property="HorizontalContentAlignment" Value="Stretch"/></Style></ListView.ItemContainerStyle><ListView.ItemContainerTransitions>
+                    <TransitionCollection>
+                        <RepositionThemeTransition/>
+                    </TransitionCollection>
+                </ListView.ItemContainerTransitions>
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <Grid Padding="12,8" MinHeight="64" ColumnSpacing="8" Background="Transparent" Loaded="TrackColumnsLoaded" Unloaded="TrackColumnsUnloaded"
+                              SizeChanged="TrackRowSizeChanged" PointerEntered="TrackRowPointerEntered" PointerExited="TrackRowPointerExited" PointerCanceled="TrackRowPointerExited"
+                              DataContextChanged="TrackRowDataContextChanged" Opacity="{Binding RowOpacity}" ToolTipService.ToolTip="{Binding AvailabilityTip}">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="24"/><ColumnDefinition Width="44"/><ColumnDefinition Width="*"/><ColumnDefinition Width="0.65*"/><ColumnDefinition Width="60"/><ColumnDefinition Width="56"/><ColumnDefinition Width="32"/><ColumnDefinition Width="32"/></Grid.ColumnDefinitions>
+                            <!-- The playing marker takes the number's place: same column, same left edge.
+                                 Centring it shifted it sideways as the column widens for long libraries. -->
+                            <Grid Grid.Column="0">
+                                <TextBlock Text="{Binding RowNumber}" FontSize="11" HorizontalAlignment="Left" VerticalAlignment="Center" Visibility="{Binding InactiveVisibility}" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                <FontIcon Glyph="&#xE768;" FontSize="12" HorizontalAlignment="Left" VerticalAlignment="Center" Visibility="{Binding ActiveVisibility}" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"/>
+                            </Grid>
+                            <Border Grid.Column="1" Width="44" Height="44" CornerRadius="8" Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}">
+                                <Grid>
+                                    <TextBlock Text="{Binding Monogram}" FontSize="15" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                    <Image Loaded="TrackArtworkLoaded" DataContextChanged="TrackArtworkChanged" Stretch="UniformToFill"/>
+                                </Grid>
+                            </Border>
+                            <StackPanel Grid.Column="2" Spacing="2" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding Title}" FontSize="15" FontWeight="SemiBold" LineHeight="22" TextTrimming="CharacterEllipsis"/>
+                                <TextBlock Text="{Binding Subtitle}" FontSize="13" LineHeight="19" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextTrimming="CharacterEllipsis"/>
+                            </StackPanel>
+                            <TextBlock Grid.Column="3" Text="{Binding Album}" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextTrimming="CharacterEllipsis"/>
+                            <TextBlock Grid.Column="4" Text="{Binding DurationText}" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                            <TextBlock Grid.Column="5" Text="{Binding Format}" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextTrimming="CharacterEllipsis"/>
+                            <!-- A starred row keeps its star; the controls themselves appear on hover. -->
+                            <Grid Grid.Column="6">
+                                <FontIcon Glyph="&#xE735;" FontSize="13" HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False"
+                                          Visibility="{Binding FavoriteVisibility}" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"/>
+                                <Button Style="{StaticResource RowActionButtonStyle}" Opacity="0" Click="RowFavoriteClicked" Loaded="RowFavoriteLoaded">
+                                    <FontIcon Glyph="{Binding FavoriteGlyph, FallbackValue=&#xE734;}" FontSize="13" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"/>
+                                </Button>
+                            </Grid>
+                            <Button Grid.Column="7" Style="{StaticResource RowActionButtonStyle}" Opacity="0" Click="RowMoreClicked" Loaded="RowMoreLoaded">
+                                <FontIcon Glyph="&#xE712;" FontSize="13"/>
+                            </Button>
+                        </Grid>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+            <Grid x:Name="RemotePanel" Grid.Row="1" RowSpacing="10" Visibility="Collapsed">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Grid ColumnSpacing="10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel>
+                        <TextBlock x:Name="RemoteTitle" FontSize="15" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                        <TextBlock x:Name="RemoteStatus" FontSize="12" TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Top">
+                        <Button x:Name="RefreshRemoteButton" Click="RefreshRemoteClicked"/>
+                        <Button x:Name="CloseRemoteButton" Click="CloseRemoteClicked"/>
+                    </StackPanel>
+                </Grid>
+                <!-- R4-4: the provider can expose several libraries (Subsonic music
+                     folders). Selecting one restarts the listing against it. -->
+                <StackPanel x:Name="RemoteLibraryRow" Grid.Row="1" Orientation="Horizontal" Spacing="8" Margin="0,6,0,0" Visibility="Collapsed">
+                    <TextBlock x:Name="RemoteLibraryLabel" FontSize="12" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                    <ComboBox x:Name="RemoteLibrarySelector" MinWidth="220" FontSize="12"
+                              SelectionChanged="RemoteLibrarySelectionChanged"/>
+                </StackPanel>
+                <Grid Grid.Row="2" ColumnSpacing="12" Padding="12,2" Margin="0,0,18,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="70"/>
+                        <ColumnDefinition Width="70"/>
+                        <ColumnDefinition Width="90"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock x:Name="RemoteColumnTitle" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                    <TextBlock x:Name="RemoteColumnFormat" Grid.Column="1" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                    <TextBlock x:Name="RemoteColumnDuration" Grid.Column="2" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                    <TextBlock x:Name="RemoteColumnSize" Grid.Column="3" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                </Grid>
+                <!-- Rows use the header's insets (no item padding, same right gutter) so the columns line up. -->
+                <ListView x:Name="RemoteList" Grid.Row="3" Padding="0,0,18,0" IsItemClickEnabled="True" SelectionMode="Single" ItemClick="PlayRemoteTrack">
+                    <ListView.ItemContainerStyle><Style TargetType="ListViewItem" BasedOn="{StaticResource DefaultListViewItemStyle}"><Setter Property="Padding" Value="0"/><Setter Property="Margin" Value="0"/><Setter Property="HorizontalContentAlignment" Value="Stretch"/></Style></ListView.ItemContainerStyle>
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <Grid ColumnSpacing="12" Padding="12,6">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="70"/>
+                                    <ColumnDefinition Width="70"/>
+                                    <ColumnDefinition Width="90"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="{Binding Title}" TextTrimming="CharacterEllipsis"/>
+                                <TextBlock Grid.Column="1" Text="{Binding Format}" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                <TextBlock Grid.Column="2" Text="{Binding DurationText}" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                <TextBlock Grid.Column="3" Text="{Binding SizeText}" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                            </Grid>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+                <!-- R4-4: the host contract has no offset/cursor, so "load more" can
+                     only re-request with a larger limit. Only shown while the host
+                     still reports truncation and the cap has not been reached. -->
+                <StackPanel Grid.Row="4" Orientation="Horizontal" Spacing="10" Margin="0,6,0,0">
+                    <Button x:Name="LoadMoreRemoteButton" Click="LoadMoreRemoteClicked"
+                            Visibility="Collapsed"/>
+                    <TextBlock x:Name="RemoteTruncationNotice" FontSize="12" VerticalAlignment="Center"
+                               TextWrapping="Wrap" MaxWidth="520" Visibility="Collapsed"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                </StackPanel>
+            </Grid>
+            <Grid x:Name="LyricsPanel" Grid.Row="1" Visibility="Collapsed" RowSpacing="8">
+                <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                <!-- Lyrics take the list's place. The header carries the way back and the
+                     actions on this track's lyric file; nothing else in the app repeats them. -->
+                <StackPanel Margin="0,10,20,0">
+                    <Grid ColumnSpacing="10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Button x:Name="CloseLyricsButton" Click="ToggleLyrics" MinHeight="32">
+                            <StackPanel Orientation="Horizontal" Spacing="8"><FontIcon Glyph="&#xE72B;" FontSize="12"/><TextBlock x:Name="CloseLyricsLabel"/></StackPanel>
+                        </Button>
+                        <TextBlock x:Name="LyricsStatus" Grid.Column="1" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextTrimming="CharacterEllipsis"/>
+                        <DropDownButton x:Name="LyricsFileButton" Grid.Column="2" MinHeight="32">
+                            <DropDownButton.Flyout>
+                                <MenuFlyout Placement="BottomEdgeAlignedRight">
+                                    <MenuFlyoutItem x:Name="BindLyricsButton" Click="BindLyrics"/>
+                                    <MenuFlyoutItem x:Name="ClearLyricsButton" Click="ClearLyrics"/>
+                                    <MenuFlyoutItem x:Name="ReparseLyricsButton" Click="ReparseLyrics"/>
+                                </MenuFlyout>
+                            </DropDownButton.Flyout>
+                        </DropDownButton>
+                    </Grid>
+                    <TextBlock x:Name="LyricsMeta" Margin="0,6,0,0" FontSize="12" HorizontalAlignment="Left"
+                               Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+                               TextTrimming="CharacterEllipsis" MaxWidth="520"/>
+                </StackPanel>
+                <ListView x:Name="LyricsList" Grid.Row="1" IsItemClickEnabled="True" SelectionMode="None" ItemClick="LyricsLineClicked">
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Padding="4,8" Spacing="2">
+                                <TextBlock Text="{Binding RoleLabel}" FontSize="11" Opacity="0.68" Visibility="{Binding RoleVisibility}"/>
+                                <!-- Emphasis (size and opacity) is applied and tweened by the view. -->
+                                <TextBlock Text="{Binding Text}" TextWrapping="Wrap" FontSize="15" Opacity="0.42"/>
+                                <TextBlock Text="{Binding Translation}" TextWrapping="Wrap" FontSize="13" Opacity="0.3"
+                                           Visibility="{Binding TranslationVisibility}"/>
+                                <TextBlock Text="{Binding Roman}" TextWrapping="Wrap" FontSize="13" FontStyle="Italic" Opacity="0.3"
+                                           Visibility="{Binding RomanVisibility}"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </Grid>
+            <StackPanel x:Name="EmptyStatePanel" Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="10" Visibility="Collapsed">
+                <FontIcon x:Name="EmptyIcon" Glyph="&#xE8A5;" FontSize="34" HorizontalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                <TextBlock x:Name="EmptyTitle" FontSize="16" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+                <TextBlock x:Name="EmptyHint" MaxWidth="440" TextWrapping="Wrap" TextAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                <Button x:Name="EmptyActionButton" Click="EmptyStateAction" HorizontalAlignment="Center"/>
+            </StackPanel>
+            <!-- The rail overlays the list; its buttons never enter the ListView's playback path.
+                 Width, border plus padding, and the 24 px marker slots are all multiples of 4, so
+                 they land on whole pixels at every display scale and the markers stay centred. -->
+            <Border x:Name="TrackNavigationRail" Grid.Row="1" Width="32" Margin="6,8,0,0"
+                    HorizontalAlignment="Left" VerticalAlignment="Top" MaxHeight="976" Translation="0,0,16"
+                    CornerRadius="12" Padding="3,7" BorderThickness="1"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    Background="{ThemeResource TrackNavigationSurfaceBrush}"
+                    Visibility="Collapsed" PointerEntered="TrackNavigationOverlayEntered"
+                    PointerExited="TrackNavigationOverlayExited" KeyDown="TrackNavigationRailKeyDown">
+                <Border.RenderTransform><CompositeTransform x:Name="TrackNavigationRailTransform"/></Border.RenderTransform>
+                <Border.Shadow><ThemeShadow/></Border.Shadow>
+                <ScrollViewer x:Name="TrackNavigationRailScroller" VerticalScrollBarVisibility="Hidden"
+                              ViewChanged="TrackNavigationRailViewChanged"
+                              VerticalScrollMode="Enabled" HorizontalScrollMode="Disabled"
+                              HorizontalScrollBarVisibility="Disabled">
+                    <StackPanel x:Name="TrackNavigationMarkers" HorizontalAlignment="Center"/>
+                </ScrollViewer>
+            </Border>
+            <Border x:Name="TrackNavigationPreview" Grid.Row="1" Width="236"
+                    HorizontalAlignment="Left" VerticalAlignment="Top" Margin="48,0,0,0" Translation="0,0,24"
+                    CornerRadius="12" Padding="10" BorderThickness="1"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    Background="{ThemeResource TrackNavigationSurfaceBrush}"
+                    Visibility="Collapsed" PointerEntered="TrackNavigationOverlayEntered"
+                    PointerExited="TrackNavigationOverlayExited">
+                <Border.RenderTransform><CompositeTransform x:Name="TrackNavigationPreviewTransform"/></Border.RenderTransform>
+                <Border.Shadow><ThemeShadow/></Border.Shadow>
+                <ScrollViewer VerticalScrollBarVisibility="Hidden" VerticalScrollMode="Enabled">
+                <StackPanel Spacing="6">
+                    <TextBlock x:Name="TrackNavigationRange" FontSize="11" FontWeight="SemiBold"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                    <StackPanel x:Name="TrackNavigationPreviewRows" Spacing="6"/>
+                    <TextBlock x:Name="TrackNavigationEmpty" FontSize="12"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                </StackPanel>
+                </ScrollViewer>
+            </Border>
+            <!-- Brings the playing song to the middle of the list and selects it. Only while the song is in
+                 this list but not what the list is showing as selected, or is out of view. The bottom
+                 margin grows by the playback bar's height (SetPlaybackBarInset). -->
+            <Button x:Name="LocateButton" Grid.Row="1" Width="44" Height="44" Padding="0" CornerRadius="22"
+                    HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,36,16" Translation="0,0,16"
+                    Style="{StaticResource AccentButtonStyle}" Visibility="Collapsed" Click="LocatePlayingClicked">
+                <Button.Shadow><ThemeShadow/></Button.Shadow>
+                <FontIcon Glyph="&#xE81D;" FontSize="18"/>
+            </Button>
+        </Grid>
+
+        <!-- Scrolling loads the next page by itself. The button is only for a list too short to scroll. -->
+        <StackPanel x:Name="CatalogFooter" Grid.Row="4" Margin="0,8,0,8" Visibility="Collapsed" Orientation="Horizontal" Spacing="12">
+            <Button x:Name="LoadMoreButton" IsEnabled="False" Click="LoadMore"/>
+        </StackPanel>
+    </Grid>
+</UserControl>

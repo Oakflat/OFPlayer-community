@@ -130,6 +130,14 @@ pub(crate) fn initialize_schema(connection: &Connection) -> Result<(), String> {
             CREATE INDEX IF NOT EXISTS idx_tracks_library_artist_group
               ON tracks(library_id, artist, album_artist);
 
+            CREATE TABLE IF NOT EXISTS local_file_tracking (
+              track_id TEXT PRIMARY KEY NOT NULL, source_path TEXT NOT NULL,
+              byte_length INTEGER NOT NULL, modified_ns TEXT NOT NULL, sha256 TEXT NOT NULL
+            );
+            CREATE INDEX IF NOT EXISTS idx_local_file_tracking_content ON local_file_tracking(byte_length,sha256);
+            CREATE TRIGGER IF NOT EXISTS delete_local_file_tracking AFTER DELETE ON tracks BEGIN
+              DELETE FROM local_file_tracking WHERE track_id=OLD.id;
+            END;
             CREATE TABLE IF NOT EXISTS track_artwork (
               track_id TEXT PRIMARY KEY NOT NULL,
               artwork_text TEXT NOT NULL,

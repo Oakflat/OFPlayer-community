@@ -27,6 +27,21 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: Build embedded player pages
+        run: |
+          npm --prefix web ci --no-audit --no-fund
+          if ($LASTEXITCODE -ne 0) { throw 'npm restore failed' }
+          npm --prefix web run build
+          if ($LASTEXITCODE -ne 0) { throw 'web build failed' }
+          New-Item -ItemType Directory -Path src-winui/OFPlayer.Community/Assets/web -Force | Out-Null
+          Get-ChildItem -LiteralPath web/dist -Force | Copy-Item -Destination src-winui/OFPlayer.Community/Assets/web -Recurse -Force
+      - name: Embedded player tests
+        run: npm --prefix web test
       - name: Install pinned Rust toolchain
         run: rustup show
       - name: Check dependency boundaries
@@ -45,5 +60,9 @@ jobs:
         run: dotnet build src-winui/OFPlayer.Community -c Release -p:Platform=x64 -p:RestoreLockedMode=true
       - name: Native host contract
         run: python tests/host_contract.py --host .artifacts/native/release/ofplayer-community-host.exe
+      - name: Mainline frontend contract
+        run: python tests/frontend_contract.py --host .artifacts/native/release/ofplayer-community-host.exe
+      - name: Real C# transport contract
+        run: dotnet run --project src-winui/OFPlayer.Community.Protocol.Tests -c Release -p:RestoreLockedMode=true -- .artifacts/native/release/ofplayer-community-host.exe
       - name: Managed tests
         run: dotnet run --project src-winui/OFPlayer.Community.Tests -c Release -p:RestoreLockedMode=true

@@ -12,7 +12,7 @@ public partial class App : Application
         instance = new Mutex(false, @"Local\OFPlayer.Community.Instance." + sid);
         bool acquired;
         try { acquired = instance.WaitOne(0); } catch (AbandonedMutexException) { acquired = true; }
-        if (!acquired) { Environment.Exit(0); return; }
+        if (!acquired) { OFPlayer_WinUI.Services.TrayIconHost.ActivateExisting(); Environment.Exit(0); return; }
         InitializeComponent();
     }
     protected override void OnLaunched(LaunchActivatedEventArgs args)

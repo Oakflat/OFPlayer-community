@@ -170,6 +170,25 @@ pub fn migrate(source: &Path, destination: &Path) -> Result<Value, String> {
         )
         .map_err(|e| e.to_string())?;
     let transaction = target.transaction().map_err(|e| e.to_string())?;
+    // The snapshot may contain triggers for tables that Community intentionally
+    // drops. Remove snapshot triggers before cleaning rows; only this checkout's
+    // schema installs triggers in the resulting catalog. The source is read-only.
+    let triggers = {
+        let mut statement = transaction
+            .prepare("SELECT name FROM sqlite_master WHERE type='trigger'")
+            .map_err(|e| e.to_string())?;
+        let rows = statement
+            .query_map([], |row| row.get::<_, String>(0))
+            .map_err(|e| e.to_string())?
+            .collect::<Result<Vec<_>, _>>()
+            .map_err(|e| e.to_string())?;
+        rows
+    };
+    for name in triggers {
+        transaction
+            .execute_batch(&format!("DROP TRIGGER \"{}\"", name.replace('"', "\"\"")))
+            .map_err(|e| e.to_string())?;
+    }
     let names = {
         let mut stmt = transaction
             .prepare(
@@ -273,6 +292,17 @@ pub fn migrate(source: &Path, destination: &Path) -> Result<Value, String> {
             "sortOption",
             "playbackOutputDeviceId",
             "lyricsFontSize",
+            "repeatMode",
+            "shuffleEnabled",
+            "lyricCapsule",
+            "lyricsScanDirectories",
+            "scanDirectories",
+            "autoScanOnLaunch",
+            "newTracksFirst",
+            "artistSortOption",
+            "collectionSortOptions",
+            "closeBehavior",
+            "immersiveTaskbarMode",
         ] {
             if let Some(v) = value.get(key) {
                 clean.insert(key.into(), v.clone());
@@ -306,6 +336,7 @@ pub fn migrate(source: &Path, destination: &Path) -> Result<Value, String> {
     }
     transaction.commit().map_err(|e| e.to_string())?;
     crate::schema::initialize_schema(&target)?;
+    crate::catalog_browse::initialize(&target)?;
     // Artwork is also stored outside track JSON. Rewrite these references so the
     // new catalog does not depend on keeping the old profile at the same path.
     let artwork = {

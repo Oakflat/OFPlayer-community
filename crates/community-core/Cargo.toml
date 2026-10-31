@@ -11,6 +11,9 @@ default = []
 asio-output = ["cpal/asio"]
 
 [dependencies]
+futures-util = "0.3"
+reqwest = { version = "0.13.2", default-features = false, features = ["json", "native-tls"] }
+tokio = { version = "1", features = ["rt", "time", "net"] }
 base64 = "0.22.1"
 chrono = { version = "0.4", default-features = false, features = ["clock"] }
 cpal = "0.16.0"

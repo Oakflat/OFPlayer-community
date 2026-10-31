@@ -82,8 +82,10 @@ fn run() -> Result<(), String> {
         }
     });
     let mut sequence = 0u64;
-    let (import_sender, import_receiver) = mpsc::channel::<(Value, Result<Value, String>)>();
+    let (import_sender, import_receiver) = mpsc::channel::<(Value, Result<Value, String>, bool)>();
     let mut importing = false;
+    let mut network_jobs = 0usize;
+    let (progress_sender, progress_receiver) = mpsc::channel::<Value>();
     let mut last_event = Instant::now();
     let mut last_persist = Instant::now();
     loop {
@@ -91,8 +93,14 @@ fn run() -> Result<(), String> {
             Ok(Ok(request)) => {
                 let id = request.get("id").cloned().unwrap_or(Value::Null);
                 let command = request.get("command").and_then(Value::as_str).unwrap_or("");
-                if command == "import.files"
-                    && request.get("protocolVersion").and_then(Value::as_u64) == Some(1)
+                if matches!(
+                    command,
+                    "import.files"
+                        | "desktop_library_import_files"
+                        | "desktop_library_scan_import"
+                        | "desktop_playlist_import_m3u"
+                        | "desktop_catalog_refresh_browse_metadata"
+                ) && request.get("protocolVersion").and_then(Value::as_u64) == Some(1)
                 {
                     if importing {
                         output(
@@ -100,18 +108,52 @@ fn run() -> Result<(), String> {
                         )?;
                     } else {
                         importing = true;
+                        session::frontend::IMPORT_CANCELLED
+                            .store(false, std::sync::atomic::Ordering::Relaxed);
+                        let command = command.to_string();
+                        let progress = progress_sender.clone();
                         let done = import_sender.clone();
                         let args = request.get("args").cloned().unwrap_or(json!({}));
                         std::thread::spawn(move || {
-                            let result = session::import_files(args);
-                            let _ = done.send((id, result));
+                            let result = if command == "import.files" {
+                                session::import_files(args)
+                            } else {
+                                session::frontend::import_job(&command, args, |v| {
+                                    let _ = progress.send(v);
+                                })
+                            };
+                            let _ = done.send((id, result, true));
+                        });
+                    }
+                    continue;
+                }
+                if matches!(
+                    command,
+                    "external_library_test_connection"
+                        | "external_library_list_libraries"
+                        | "external_library_list_tracks"
+                        | "external_library_resolve_playback_source"
+                ) && request.get("protocolVersion").and_then(Value::as_u64) == Some(1)
+                {
+                    if network_jobs >= 4 {
+                        output(
+                            json!({"protocolVersion":1,"id":id,"ok":false,"error":{"code":"busy","message":"Too many network requests"}}),
+                        )?;
+                    } else {
+                        network_jobs += 1;
+                        let done = import_sender.clone();
+                        let command = command.to_string();
+                        let args = request.get("args").cloned().unwrap_or(json!({}));
+                        std::thread::spawn(move || {
+                            let result = session::frontend::network_job(&command, args);
+                            let _ = done.send((id, result, false));
                         });
                     }
                     continue;
                 }
                 let result = if request.get("protocolVersion").and_then(Value::as_u64) != Some(1) {
                     Err("unsupported-protocol-version".into())
-                } else if command == "host_handshake" {
+                } else if matches!(command, "host_handshake" | "handshake") {
                     Ok(
                         json!({"protocolVersion":1,"edition":"community","hostVersion":"0.0.0-dev","sessionId":session_id,"pid":std::process::id(),"dataRoot":root,"capabilities":["local.catalog","local.playback","local.lyrics","local.video.preferences"]}),
                     )
@@ -135,12 +177,18 @@ fn run() -> Result<(), String> {
             Err(mpsc::RecvTimeoutError::Disconnected) => break,
             Err(mpsc::RecvTimeoutError::Timeout) => (),
         }
-        if let Ok((id, result)) = import_receiver.try_recv() {
-            importing = false;
+        if let Ok((id, result, refresh)) = import_receiver.try_recv() {
+            if refresh {
+                importing = false;
+            } else {
+                network_jobs = network_jobs.saturating_sub(1);
+            }
             // The worker has its own SQLite connection; replace the hot read cache
             // before exposing its completion to the UI, preserving the live player.
             let result = result.and_then(|data| {
-                session.import_completed()?;
+                if refresh {
+                    session.import_completed()?;
+                }
                 Ok(data)
             });
             match result {
@@ -150,7 +198,19 @@ fn run() -> Result<(), String> {
                 )?,
             }
         }
+        while let Ok(data) = progress_receiver.try_recv() {
+            sequence += 1;
+            output(
+                json!({"event":"import.progress","sessionId":session_id,"seq":sequence,"data":data}),
+            )?;
+        }
         session.tick()?;
+        for data in session.drain_watch() {
+            sequence += 1;
+            output(
+                json!({"event":"storage.watch-changed","sessionId":session_id,"seq":sequence,"data":data}),
+            )?;
+        }
         if last_event.elapsed() >= Duration::from_millis(200) {
             sequence += 1;
             output(

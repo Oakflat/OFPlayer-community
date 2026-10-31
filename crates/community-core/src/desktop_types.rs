@@ -126,6 +126,11 @@ pub struct SessionStateSnapshot {
     pub last_interacted_at: String,
     pub current_track_id: Option<String>,
     pub queue_track_ids: Vec<String>,
+    #[serde(default)]
+    pub queue_revision: u64,
+    /// Distinguishes an intentionally empty queue from legacy first-run seeding.
+    #[serde(default)]
+    pub queue_initialized: bool,
     #[serde(default = "default_session_playback_status")]
     pub playback_status: String,
     #[serde(default)]
@@ -334,6 +339,30 @@ pub struct LocalIndexInvalidationResult {
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
+pub struct MissingIndexedTrack {
+    pub track_id: String,
+    pub title: String,
+    pub source_path: String,
+    pub playlist_relation_count: usize,
+}
+
+#[derive(Debug, Clone, Default, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MissingIndexedTrackReport {
+    pub missing_tracks: Vec<MissingIndexedTrack>,
+    pub affected_playlist_count: usize,
+}
+
+#[derive(Debug, Clone, Default, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MissingIndexedTrackCleanupResult {
+    pub deleted_track_ids: Vec<String>,
+    pub deleted_relation_ids: Vec<String>,
+    pub skipped_track_ids: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct TrackDeleteResult {
     pub deleted_track_id: String,
     pub deleted_relation_ids: Vec<String>,
@@ -362,6 +391,22 @@ pub struct NavigationQueryRequest {
 pub struct CollectionTrackQueryRequest {
     pub active_library: Option<String>,
     pub active_collection_ref: Option<String>,
+    pub search_query: String,
+    pub type_filter: String,
+    pub sort_option: String,
+    pub offset: Option<usize>,
+    pub limit: Option<usize>,
+    pub include_track_ids: Option<bool>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GroupTrackQueryRequest {
+    #[serde(default)]
+    pub artist_filter: Option<String>,
+    pub group_kind: String,
+    pub group_key: String,
+    pub active_library: Option<String>,
     pub search_query: String,
     pub type_filter: String,
     pub sort_option: String,

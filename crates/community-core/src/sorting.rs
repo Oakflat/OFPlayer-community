@@ -15,6 +15,10 @@ pub struct SortableTrack {
     pub display_title: Option<String>,
     pub title: Option<String>,
     pub artist: Option<String>,
+    #[serde(default)]
+    pub artists: Vec<String>,
+    pub added_at_ms: Option<i64>,
+    pub modified_at_ms: Option<i64>,
     pub album_artist: Option<String>,
     pub album: Option<String>,
     pub genre: Option<String>,
@@ -40,6 +44,7 @@ pub struct QueryTrackRow {
     pub title: Option<String>,
     pub artist: Option<String>,
     pub album_artist: Option<String>,
+    pub album: Option<String>,
     pub file_name: Option<String>,
     pub format: Option<String>,
     pub duration: Option<f64>,
@@ -151,8 +156,9 @@ pub fn query_tracks(request: QueryTracksRequest) -> Result<QueryTracksResult, St
         Some(limit) => limit.min(total_count),
         None => total_count,
     };
-    let max_offset = total_count.saturating_sub(limit.min(total_count));
-    let offset = request.offset.unwrap_or(0).min(max_offset);
+    // Offset/limit is a forward page, not a full window anchored to the end.
+    // Moving a partial final page backwards repeats rows already returned.
+    let offset = request.offset.unwrap_or(0).min(total_count);
     let track_ids_start = Instant::now();
     let track_ids_resource_start = capture_process_resource_snapshot();
     let track_ids = if include_track_ids {
@@ -230,6 +236,7 @@ fn project_track_row(track: SortableTrack) -> QueryTrackRow {
         title: track.title,
         artist: track.artist,
         album_artist: track.album_artist,
+        album: track.album,
         file_name: track.file_name,
         format: track.format,
         duration: track.duration,
@@ -243,9 +250,12 @@ fn project_track_row(track: SortableTrack) -> QueryTrackRow {
 
 fn normalize_sort_option(value: &str) -> &str {
     match value.trim() {
+        "manual" => "manual",
         "title" => "title",
         "duration" => "duration",
         "size" => "size",
+        "date-added" => "date-added",
+        "date-modified" => "date-modified",
         _ => "recent",
     }
 }
@@ -260,6 +270,19 @@ fn normalize_type_filter(value: &str) -> String {
 
 fn compare_tracks(left: &SortableTrack, right: &SortableTrack, sort_option: &str) -> Ordering {
     match sort_option {
+        "manual" => left.original_index.cmp(&right.original_index),
+        "date-added" => right
+            .added_at_ms
+            .cmp(&left.added_at_ms)
+            .then_with(|| left.original_index.cmp(&right.original_index)),
+        "recent" => right
+            .added_at_ms
+            .cmp(&left.added_at_ms)
+            .then_with(|| right.original_index.cmp(&left.original_index)),
+        "date-modified" => right
+            .modified_at_ms
+            .cmp(&left.modified_at_ms)
+            .then_with(|| left.original_index.cmp(&right.original_index)),
         "title" => compare_text(&track_sort_label(left), &track_sort_label(right))
             .then_with(|| left.original_index.cmp(&right.original_index)),
         "duration" => compare_optional_f64_desc(left.duration, right.duration)
@@ -370,4 +393,106 @@ fn normalize_f64(value: Option<f64>) -> f64 {
 
 fn elapsed_ms(start: Instant) -> u64 {
     start.elapsed().as_millis().try_into().unwrap_or(u64::MAX)
+}
+
+#[cfg(test)]
+mod pagination_tests {
+    use super::*;
+
+    #[test]
+    fn community_features_dates_are_independent_of_manual_order_and_missing_dates_sort_last() {
+        let mut input = request(3, 0, None);
+        input.tracks[0].added_at_ms = Some(100);
+        input.tracks[0].modified_at_ms = Some(300);
+        input.tracks[1].added_at_ms = Some(200);
+        input.tracks[1].modified_at_ms = Some(100);
+        for (sort, expected) in [
+            ("date-added", vec!["track-1", "track-0", "track-2"]),
+            ("date-modified", vec!["track-0", "track-1", "track-2"]),
+            ("manual", vec!["track-0", "track-1", "track-2"]),
+        ] {
+            input.sort_option = sort.into();
+            let rows = query_tracks(
+                QueryTracksRequest {
+                    tracks: input.tracks.clone(),
+                    ..request(0, 0, None)
+                }
+                .with_sort_for_test(sort),
+            )
+            .unwrap();
+            assert_eq!(
+                rows.rows
+                    .iter()
+                    .map(|row| row.id.as_str())
+                    .collect::<Vec<_>>(),
+                expected
+            );
+        }
+    }
+
+    impl QueryTracksRequest {
+        fn with_sort_for_test(mut self, sort: &str) -> Self {
+            self.sort_option = sort.into();
+            self
+        }
+    }
+
+    fn request(total: usize, offset: usize, limit: Option<usize>) -> QueryTracksRequest {
+        QueryTracksRequest {
+            search_query: String::new(),
+            type_filter: String::new(),
+            sort_option: "manual".into(),
+            offset: Some(offset),
+            limit,
+            include_track_ids: Some(false),
+            tracks: (0..total)
+                .map(|index| {
+                    serde_json::from_value(serde_json::json!({
+                        "id": format!("track-{index}"), "libraryId": "test", "originalIndex": index,
+                        "isFavorite": false,
+                    }))
+                    .unwrap()
+                })
+                .collect(),
+        }
+    }
+
+    #[test]
+    fn catalog_pages_cover_every_track_once_including_partial_tail() {
+        for total in [0, 1, 60, 199, 200, 201, 255, 400, 401, 455] {
+            let mut ids = Vec::new();
+            loop {
+                let offset = ids.len();
+                let page = query_tracks(request(total, offset, Some(200))).unwrap();
+                assert_eq!(page.offset, offset, "total={total}");
+                assert_eq!(page.rows.len(), (total - offset).min(200));
+                ids.extend(page.rows.into_iter().map(|row| row.id));
+                if ids.len() == total {
+                    break;
+                }
+            }
+            assert_eq!(
+                ids,
+                (0..total)
+                    .map(|index| format!("track-{index}"))
+                    .collect::<Vec<_>>()
+            );
+        }
+    }
+
+    #[test]
+    fn catalog_pages_past_end_are_empty_and_never_repeat_last_page() {
+        for offset in [255, 256, usize::MAX] {
+            let page = query_tracks(request(255, offset, Some(200))).unwrap();
+            assert_eq!(page.offset, 255);
+            assert!(page.rows.is_empty());
+        }
+        assert!(query_tracks(request(255, 10, Some(0)))
+            .unwrap()
+            .rows
+            .is_empty());
+        let tail = query_tracks(request(255, 200, None)).unwrap();
+        assert_eq!(tail.offset, 200);
+        assert_eq!(tail.rows.len(), 55);
+    }
 }

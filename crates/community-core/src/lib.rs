@@ -20,3 +20,6 @@ pub mod storage;
 pub mod storage_maintenance;
 pub mod system_media;
 pub mod watcher;
+
+pub mod catalog_browse;
+pub mod external_sources;

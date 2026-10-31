@@ -1,3 +1,4 @@
+pub mod frontend;
 use ofplayer_community_core::{
     desktop_state::DesktopStateStore, desktop_types::*, lyrics, playback::*, storage,
 };
@@ -43,6 +44,10 @@ pub struct Session {
     player: PlaybackManager,
     ended: u64,
     music_suspended: bool,
+    external_track: Option<Value>,
+    watch: ofplayer_community_core::watcher::StorageWatchManager,
+    watch_sender: std::sync::mpsc::Sender<Value>,
+    watch_events: std::sync::mpsc::Receiver<Value>,
 }
 pub fn import_files(args: Value) -> Result<Value, String> {
     let request: storage::PrepareTrackImportsRequest = decode(args)?;
@@ -97,22 +102,34 @@ impl Session {
                 eprintln!("[community-host] preferred audio output unavailable: {error}");
             }
         }
+        let (watch_sender, watch_events) = std::sync::mpsc::channel();
         Ok(Self {
             state,
             player,
             ended: 0,
             music_suspended: false,
+            external_track: None,
+            watch: Default::default(),
+            watch_sender,
+            watch_events,
         })
     }
     pub fn snapshot(&mut self) -> Result<Value, String> {
         Ok(json!({"playback":self.player.snapshot(),"session":self.state.load_session_snapshot()?}))
     }
     pub fn persist(&mut self) -> Result<(), String> {
+        if self.player.snapshot().active_track_id.as_deref() == Some("external") {
+            return Ok(());
+        }
         self.state
             .update_session_playback_state(&self.player.snapshot())?;
         Ok(())
     }
+    pub fn drain_watch(&self) -> Vec<Value> {
+        self.watch_events.try_iter().take(64).collect()
+    }
     pub fn shutdown(&mut self) -> Result<(), String> {
+        self.watch.stop();
         self.player.pause();
         self.persist()?;
         self.player.reset();
@@ -209,13 +226,40 @@ impl Session {
             if let Some(id) = state.ended_track_id {
                 self.history(&id, "ended", state.duration)?;
                 let saved = self.state.load_session_snapshot()?;
+                let prefs = self.state.load_preferences()?.unwrap_or(json!({}));
+                let mode = prefs["repeatMode"].as_str().unwrap_or("all");
                 if !self.music_suspended
                     && state.active_track_id.as_deref() == Some(&id)
                     && saved.current_track_id.as_deref() == Some(&id)
-                    && saved.queue_track_ids.len() > 1
                 {
-                    if let Err(e) = self.adjacent(1) {
-                        eprintln!("[community-host] next track unavailable: {e}");
+                    let position = saved
+                        .queue_track_ids
+                        .iter()
+                        .position(|t| t == &id)
+                        .unwrap_or(0);
+                    let next = if mode == "one" {
+                        Some(id.clone())
+                    } else if prefs["shuffleEnabled"].as_bool() == Some(true)
+                        && saved.queue_track_ids.len() > 1
+                    {
+                        let offset = 1 + uuid::Uuid::new_v4().as_u128() as usize
+                            % (saved.queue_track_ids.len() - 1);
+                        Some(
+                            saved.queue_track_ids
+                                [(position + offset) % saved.queue_track_ids.len()]
+                            .clone(),
+                        )
+                    } else if position + 1 < saved.queue_track_ids.len() {
+                        Some(saved.queue_track_ids[position + 1].clone())
+                    } else if mode == "all" {
+                        saved.queue_track_ids.first().cloned()
+                    } else {
+                        None
+                    };
+                    if let Some(next) = next {
+                        if let Err(error) = self.select(&next, None, true, 0.0) {
+                            eprintln!("[community-host] next track unavailable: {error}");
+                        }
                     }
                 }
             }
@@ -341,7 +385,7 @@ impl Session {
                     .load_recent_history(args["limit"].as_u64().unwrap_or(100).min(1000) as usize)?,
             ),
             "stats.load" => encode(self.state.load_listening_stats(&decode(args)?)?),
-            _ => Err("unknown-command".into()),
+            _ => self.frontend_command(command, args),
         }
     }
     fn reconcile(&mut self) -> Result<(), String> {

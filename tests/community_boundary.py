@@ -7,10 +7,11 @@ import xml.etree.ElementTree as ET
 
 root=Path(__file__).resolve().parents[1]
 meta=json.loads(subprocess.check_output(['cargo','metadata','--locked','--format-version','1','--filter-platform','x86_64-pc-windows-msvc'],cwd=root,text=True,encoding='utf-8'))
-blocked={'tauri','tauri-build','ofplayer-hub','ofplayer-native-host','reqwest','ureq','webrtc','quinn','mdns-sd','tokio-tungstenite','axum'}
+blocked={'tauri','tauri-build','ofplayer-hub','ofplayer-native-host','ureq','webrtc','quinn','mdns-sd','tokio-tungstenite','axum'}
 packages=[]
 for package in meta['packages']:
     assert package['name'] not in blocked, 'Excluded dependency: '+package['name']
+    assert not package['name'].startswith(('ofplayer-hub-', 'ofplayer-cloudflare-')), 'Commercial transport dependency'
     if package['source'] is None:
         assert Path(package['manifest_path']).resolve().is_relative_to(root), 'External source dependency'
     else:
@@ -28,4 +29,7 @@ for source in (root/'src-winui').rglob('*.cs'):
     assert not re.search(r'\b(OpenUriAsync|CreateFromUri|NetworkSourceFactory)\b',text), 'Remote video source exposed'
 assert not (root/'src-tauri/Cargo.toml').exists(), 'Legacy Tauri remains an active build'
 assert not (root/'package.json').exists(), 'Legacy frontend remains an active build'
-print(f'Community boundary passed: {len(packages)} package records; local projects; DAU-only application network client')
+for excluded in ('BackendAccountSessionService.cs','ConnectSessionService.cs','CloudLibraryProfile.cs','MainViewModel.Together.cs','MainViewModel.Hub.cs','MainViewModel.Licensing.cs'):
+    assert not list((root/'src-winui').rglob(excluded)), 'Commercial application service restored: '+excluded
+assert (root/'web/immersive.html').is_file() and (root/'web/lyric-capsule.html').is_file()
+print(f'Community boundary passed: {len(packages)} package records; standalone projects; third-party providers and minimal DAU; no commercial services')
